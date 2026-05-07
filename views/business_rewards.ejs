@@ -1,0 +1,189 @@
+<!-- File: views/business_rewards.ejs -->
+<% locals.pageTitle = 'Business Rewards'; %>
+
+<style>
+  /* General Table Styles */
+  .rewards-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: Arial, sans-serif;
+    margin-bottom: 30px;
+  }
+  .rewards-table th {
+    background-color: #8B0000; /* Dark Red Header */
+    color: white;
+    padding: 10px;
+    text-align: center;
+    border: 1px solid #ddd;
+  }
+  .rewards-table td {
+    padding: 8px;
+    border: 1px solid #ddd;
+    vertical-align: middle;
+  }
+  .rewards-table tr:nth-child(even) {
+    background-color: #f9f9f9;
+  }
+  .rewards-table tr:hover {
+    background-color: #e6f7ff;
+  }
+
+  /* Specific Styles for Champions Table (Bottom Table) */
+  .champions-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: Arial, sans-serif;
+    margin-top: 20px;
+  }
+  .champions-table th {
+    background-color: #8B0000; /* Keep header red */
+    color: white;
+    padding: 10px;
+    text-align: center;
+    border: 1px solid #ddd;
+  }
+  .champions-table td {
+    background-color: #003366 !important; /* Dark Blue Background for all cells */
+    color: white !important; /* White Text Default */
+    padding: 10px;
+    border: 1px solid #ddd;
+    vertical-align: middle;
+  }
+  /* Gold/Yellow Text for specific items */
+  .champions-table .gold-text {
+    color: #FFD700 !important;
+    font-weight: bold;
+  }
+
+  /* Title and Logo Styles */
+  .reward-title {
+    background-color: #003366; /* Dark Blue */
+    color: white;
+    padding: 15px;
+    font-size: 24px;
+    font-weight: bold;
+    text-align: center;
+    margin-bottom: 20px;
+    border-radius: 5px;
+  }
+  .company-logo {
+    text-align: center;
+    margin-top: 20px;
+  }
+  .company-logo img {
+    max-width: 200px;
+  }
+</style>
+
+<div class="container-fluid">
+    <div class="reward-title">Business Rewards</div>
+
+    <!-- Table 1: From Slide 1 -->
+    <table class="rewards-table">
+        <thead>
+            <tr>
+                <th>Business Rewards</th>
+                <th>Requirement</th>
+                <th>Conditions</th>
+                <th>Rate</th>
+                <th>Reward</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><strong>Approvals Hero</strong></td>
+                <td>Highest Bonus Approvals</td>
+                <td>50% On Num<br>50% On Quantity</td>
+                <td>Q/Region</td>
+                <td><strong>3 Days</strong></td>
+            </tr>
+            <tr>
+                <td><strong>New Closed Account</strong></td>
+                <td>Penetration for minimum 3 Accounts/ Same Product</td>
+                <td>Max 3000 LE</td>
+                <td>S</td>
+                <td><strong>3% Of Invoice</strong></td>
+            </tr>
+            <tr>
+                <td><strong>Launch Heros</strong></td>
+                <td>Top 3 Ach%/ Region</td>
+                <td>Min Ach 90%</td>
+                <td>Q</td>
+                <td><strong>5,000 – 3,000 – 1,500</strong></td>
+            </tr>
+            <tr>
+                <td><strong>Signature Call</strong></td>
+                <td>Best Call Per PM</td>
+                <td>1/ Region</td>
+                <td>Q</td>
+                <td><strong>Development</strong></td>
+            </tr>
+            <tr>
+                <td><strong>Best Performance</strong></td>
+                <td>Top 3 KPIs%</td>
+                <td>3 MRs/ Region</td>
+                <td>Q</td>
+                <td><strong>Development</strong></td>
+            </tr>
+            <tr>
+                <td><strong>Best Achievers</strong></td>
+                <td>Top 3 Ach%</td>
+                <td>3 MRs/ Region</td>
+                <td>Q</td>
+                <td><strong>Development</strong></td>
+            </tr>
+            <tr>
+                <td><strong>Top Player</strong></td>
+                <td>Highest MR (Ach% + KPIs) / L</td>
+                <td>1MR/ L</td>
+                <td>Q</td>
+                <td><strong>5,000</strong></td>
+            </tr>
+            <tr>
+                <td><strong>Persistent Achiever</strong></td>
+                <td>4 Q Achievement in a row</td>
+                <td>--</td>
+                <td>A</td>
+                <td><strong>2 Nights Accommodation</strong></td>
+            </tr>
+        </tbody>
+    </table>
+
+    <!-- Table 2: Champions (Updated with Dark Blue Background) -->
+    <table class="rewards-table champions-table">
+        <thead>
+            <tr>
+                <th>Type</th>
+                <th>Requirement</th>
+                <th>Conditions</th>
+                <th>Rate</th>
+                <th>Reward</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td class="gold-text" style="text-align: center;">Champions</td>
+                <td>
+                    <ul style="margin: 0; padding-left: 20px; color: white;">
+                        <li>Ach% 110%</li>
+                        <li>CRM KPIs min 80%</li>
+                        <li>Market Performance KPIs Min 80</li>
+                        <li>Self Development (1/S)</li>
+                        <li>Time to hire</li>
+                        <li>Pulse survey</li>
+                        <li>Turnover Rate</li>
+                        <li>Min Ach 90%</li>
+                    </ul>
+                </td>
+                <td class="gold-text" style="text-align: center;">2 Semesters = Incentive Trip</td>
+                <td style="text-align: center;">S</td>
+                <td class="gold-text" style="text-align: center;">7,000</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div class="company-logo">
+        <!-- You can add the Averroes Pharma logo here if needed -->
+        <img src="/static/images/averroes_logo.png" alt="Averroes Pharma Logo" onerror="this.style.display='none'">
+    </div>
+</div>

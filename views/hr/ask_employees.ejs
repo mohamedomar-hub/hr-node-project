@@ -1,0 +1,75 @@
+<!-- File: views/hr/ask_employees.ejs -->
+<% locals.pageTitle = 'Ask Employees - Send Request'; %>
+
+<!-- Include Select2 CSS & JS (If not already in base.ejs) -->
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+<div class="container">
+    <h2><i class="fas fa-paper-plane me-2"></i>Send Request to Employee</h2>
+    <p class="text-muted">Text-only messages appear in the employee Inbox. Messages with an attached file appear in Document Requests.</p>
+
+    <!-- Flash Messages -->
+    <% if (typeof messages !== 'undefined' && messages) { %>
+        <% if (messages.success) { %><div class="alert alert-success"><%= messages.success %></div><% } %>
+        <% if (messages.danger) { %><div class="alert alert-danger"><%= messages.danger %></div><% } %>
+    <% } %>
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <form action="/ask_employees" method="POST" enctype="multipart/form-data">
+                
+                <!-- Searchable Employee Dropdown -->
+                <div class="mb-3">
+                    <label for="recipient" class="form-label">Select Employee:</label>
+                    <select name="recipient_code" id="recipient" class="form-select" style="width: 100%;" required>
+                        <option value="" disabled selected>-- Search and Choose an Employee --</option>
+                        <% if (typeof employees !== 'undefined' && employees && employees.length > 0) { %>
+                            <% employees.forEach(function(emp) { %>
+                                <option value="<%= emp.employee_code %>">
+                                    <%= emp.employee_name %> - <%= emp.title %> (<%= emp.department %>)
+                                </option>
+                            <% }); %>
+                        <% } else { %>
+                            <option value="" disabled>No employees found.</option>
+                        <% } %>
+                    </select>
+                </div>
+
+                <!-- Document Type -->
+                <div class="mb-3">
+                    <label for="doc_type" class="form-label">Subject / Document Type:</label>
+                    <input type="text" name="document_type" id="doc_type" class="form-control" placeholder="e.g., Personal Photo, Certificate, ID Copy, Message Subject..." required>
+                </div>
+
+                <!-- Message -->
+                <div class="mb-3">
+                    <label for="message" class="form-label">Message / Instruction:</label>
+                    <textarea name="message" id="message" class="form-control" rows="4" placeholder="Write your message or instructions..."></textarea>
+                </div>
+
+                <!-- File Upload -->
+                <div class="mb-3">
+                    <label for="file" class="form-label">Attach File (Optional):</label>
+                    <input type="file" name="document_file" id="file" class="form-control" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.gif">
+                    <small class="text-muted">Supported formats: PDF, Word, Images (Max 10MB)</small>
+                </div>
+
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="fas fa-send"></i> Send Request
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    $(document).ready(function() {
+        $('#recipient').select2({
+            placeholder: "Search for an employee...",
+            allowClear: true,
+            width: 'resolve'
+        });
+    });
+</script>

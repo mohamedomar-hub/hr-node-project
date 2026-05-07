@@ -1,0 +1,69 @@
+<!-- File: views/profile.ejs -->
+<% locals.pageTitle = 'My Profile'; %>
+
+<div class="container">
+    <!-- Profile Info Card -->
+    <div class="card mb-4">
+        <div class="card-header bg-primary text-white">Employee Information</div>
+        <div class="card-body">
+            <table class="table table-bordered">
+                <tr><th>Employee Code</th><td><%= user.employee_code %></td></tr>
+                <tr><th>Name</th><td><%= user.employee_name %></td></tr>
+                <tr><th>Title</th><td><%= user.title %></td></tr>
+                <tr><th>Department</th><td><%= user.department %></td></tr>
+                <tr><th>Manager Name</th><td><%= manager_name %></td></tr>
+                <tr><th>Hiring Date</th><td><%= user.hire_date ? formatDisplayDate(user.hire_date) : 'N/A' %></td></tr>
+                <tr><th>Email</th><td><%= user.email %></td></tr>
+            </table>
+        </div>
+    </div>
+
+    <!-- Profile Photo Section -->
+    <div class="card mb-4">
+        <div class="card-header bg-secondary text-white">Profile Photo</div>
+        <div class="card-body text-center">
+            <% if (photo) { %>
+                <img src="/<%= photo %>" alt="Profile Photo" class="img-thumbnail mb-3" style="max-width: 200px; max-height: 200px; object-fit: cover;">
+                <br>
+                <form action="/profile/photo/delete" method="POST" style="display:inline;">
+                    <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure you want to delete your photo?');">
+                        <i class="fas fa-trash"></i> Delete Photo
+                    </button>
+                </form>
+            <% } else { %>
+                <p class="text-muted">No photo uploaded yet.</p>
+            <% } %>
+            
+            <form action="/profile/photo" method="POST" enctype="multipart/form-data" class="mt-3">
+                <input type="file" name="photo" class="form-control" accept="image/*" required>
+                <button type="submit" class="btn btn-success mt-2">
+                    <i class="fas fa-upload"></i> <%= photo ? 'Change Photo' : 'Upload Photo' %>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Movement History (Optional) -->
+    <div class="card">
+        <div class="card-header bg-dark text-white">Movement History</div>
+        <div class="card-body">
+            <% if (movements && movements.length > 0) { %>
+                <table class="table table-striped">
+                    <thead><tr><th>Date</th><th>Action</th><th>To Title</th><th>To Dept</th></tr></thead>
+                    <tbody>
+                        <% movements.forEach(function(m) { %>
+                        <tr>
+                            <td><%= m.effective_date %></td>
+                            <td><%= m.action %></td>
+                            <td><%= m.to_title %></td>
+                            <td><%= m.to_department %></td>
+                        </tr>
+                        <% }); %>
+                    </tbody>
+                </table>
+            <% } else { %>
+                <p>No movement history available.</p>
+            <% } %>
+        </div>
+    </div>
+</div>

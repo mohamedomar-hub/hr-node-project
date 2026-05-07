@@ -1,0 +1,64 @@
+<% locals.pageTitle = 'Recruitment'; %>
+
+<div class="container-fluid">
+    <div class="card mb-4">
+        <div class="card-body">
+            <h3 class="mb-2">Recruitment</h3>
+            <p class="mb-0 text-muted">Upload CVs and manage candidate files exactly as in the previous HR workflow.</p>
+        </div>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-header">Upload CV</div>
+        <div class="card-body">
+            <form action="/recruitment" method="POST" enctype="multipart/form-data" class="row g-3 align-items-end">
+                <div class="col-lg-8">
+                    <label class="form-label">Candidate CV</label>
+                    <input type="file" name="cv" class="form-control" accept=".pdf,.doc,.docx" required>
+                </div>
+                <div class="col-lg-4">
+                    <button type="submit" class="btn btn-success w-100">Upload CV</button>
+                </div>
+            </form>
+            <p class="text-muted small mt-3 mb-0">CVs are stored as-is and can be opened or deleted from the list below.</p>
+        </div>
+    </div>
+
+    <% if (rows && rows.length > 0) { %>
+        <div class="card">
+            <div class="card-header">Uploaded CVs</div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0 align-middle">
+                        <thead>
+                            <tr>
+                                <th>File</th>
+                                <th>Uploaded</th>
+                                <th class="text-end">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <% rows.forEach(function(row) { %>
+                                <tr>
+                                    <td class="fw-semibold"><%= row.filename %></td>
+                                    <td><%= row.uploaded_at %></td>
+                                    <td class="text-end">
+                                        <div class="d-flex justify-content-end gap-2 flex-wrap">
+                                            <a href="/<%= String(row.path || '').replace(/\\/g, '/') %>" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-outline-primary">View</a>
+                                            <form action="/recruitment/delete" method="POST" class="m-0 d-inline-block" onsubmit="return confirm('Delete this CV?');">
+                                                <input type="hidden" name="id" value="<%= row.id %>">
+                                                <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                            <% }) %>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    <% } else { %>
+        <div class="alert alert-info">No CVs uploaded yet.</div>
+    <% } %>
+</div>

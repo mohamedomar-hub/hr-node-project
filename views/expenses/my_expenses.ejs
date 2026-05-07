@@ -1,0 +1,85 @@
+<!-- File: views/expenses/my_expenses.ejs -->
+<% locals.pageTitle = 'My Expenses'; %>
+
+<div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>My Expenses</h2>
+        <a href="/expense/my/download" class="btn btn-success">
+            <i class="fas fa-file-excel"></i> Download Excel
+        </a>
+    </div>
+
+    <% if (typeof expenses !== 'undefined' && expenses && expenses.length > 0) { %>
+        <div class="table-responsive">
+            <table class="table table-bordered table-hover align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th>Date</th>
+                        <th>From</th>
+                        <th>To</th>
+                        <th>Type</th>
+                        <th>Days</th>
+                        <th>Total Amount</th>
+                        <th>Status</th>
+                        <th>Attachment</th> <!-- New Column -->
+                        <th>Action</th>     <!-- New Column for Delete -->
+                    </tr>
+                </thead>
+                <tbody>
+                    <% expenses.forEach(function(e) { %>
+                    <tr>
+                        <td>
+                            <% 
+                                let formattedDate = '-';
+                                if (e.expense_date) {
+                                    const d = new Date(e.expense_date);
+                                    if (!isNaN(d.getTime())) {
+                                        formattedDate = d.toISOString().split('T')[0];
+                                    }
+                                }
+                            %>
+                            <%= formattedDate %>
+                        </td>
+                        <td><%= e.from_location || '-' %></td>
+                        <td><%= e.to_location || '-' %></td>
+                        <td><%= e.allowance_type || '-' %></td>
+                        <td><%= e.num_days || 1 %></td>
+                        <td><%= Number(e.total || 0).toLocaleString(undefined, {minimumFractionDigits: 2}) %></td>
+                        <td>
+                            <% if (e.status === 'Approved') { %>
+                                <span class="badge bg-success">Approved</span>
+                            <% } else if (e.status === 'Rejected') { %>
+                                <span class="badge bg-danger">Rejected</span>
+                            <% } else { %>
+                                <span class="badge bg-warning">Pending</span>
+                            <% } %>
+                        </td>
+                        <td>
+                            <% if (e.attachment_path) { %>
+                                <a href="/<%= e.attachment_path %>" target="_blank" class="btn btn-sm btn-outline-primary">
+                                    <i class="fas fa-paperclip"></i> View/Download
+                                </a>
+                            <% } else { %>
+                                <span class="text-muted">-</span>
+                            <% } %>
+                        </td>
+                        <td>
+                            <% if (e.status === 'Pending') { %>
+                                <form action="/expense/delete/<%= e.id %>" method="POST" style="display:inline;" onsubmit="return confirm('Are you sure you want to delete this expense item?');">
+                                    <button type="submit" class="btn btn-sm btn-danger">
+                                        <i class="fas fa-trash"></i> Delete
+                                    </button>
+                                </form>
+                            <% } else { %>
+                                <span class="text-muted small">Locked</span>
+                            <% } %>
+                        </td>
+                    </tr>
+                    <% }); %>
+                </tbody>
+            </table>
+        </div>
+    <% } else { %>
+        <div class="alert alert-info">No expense requests found.</div>
+    <% } %>
+</div>

@@ -1,0 +1,67 @@
+<% locals.pageTitle = 'Self Development'; %>
+
+<div class="container-fluid">
+    <div class="card mb-4">
+        <div class="card-body d-flex justify-content-between align-items-center flex-wrap gap-3">
+            <div>
+                <h3 class="mb-2">Self Development</h3>
+                <p class="mb-0 text-muted">Upload your development evidence or certificate.</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-header">Add New Entry</div>
+        <div class="card-body">
+            <form action="/self_dev" method="POST" enctype="multipart/form-data">
+                <div class="row g-4">
+                    <div class="col-lg-6">
+                        <label class="form-label">Attach File</label>
+                        <input type="file" class="form-control" name="evidence" required>
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-end mt-4">
+                    <button class="btn btn-primary px-4" type="submit">Save Entry</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <% if (entries && entries.length > 0) { %>
+        <div class="card">
+            <div class="card-header">Saved Entries</div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0 align-middle">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th class="text-end">Attachment</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <% entries.forEach(function(entry) { %>
+                                <tr>
+                                    <td><%= formatDisplayDate(entry.created_at) %></td>
+                                    <td class="text-end">
+                                        <div class="d-flex justify-content-end gap-2 flex-wrap">
+                                            <% if (entry.attachment) { %>
+                                                <a class="btn btn-sm btn-outline-primary" href="/self_dev/file/<%= entry.id %>" target="_blank" rel="noopener noreferrer">View</a>
+                                            <% } %>
+                                            <form action="/self_dev/<%= entry.id %>/delete" method="POST" class="m-0" onsubmit="return confirm('Delete this self development entry?');">
+                                                <button class="btn btn-sm btn-danger" type="submit">Delete</button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                            <% }) %>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    <% } else { %>
+        <div class="alert alert-info">No entries yet.</div>
+    <% } %>
+</div>

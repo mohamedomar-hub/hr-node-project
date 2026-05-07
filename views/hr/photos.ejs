@@ -1,0 +1,32 @@
+<!-- File: views/hr/photos.ejs -->
+<% locals.pageTitle = 'Employee Photos'; %>
+
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Employee Photos</h2>
+        <a href="/employee_photos/download/all" class="btn btn-success">
+            <i class="fas fa-download"></i> Download All Photos (ZIP)
+        </a>
+    </div>
+
+    <% if (typeof photos !== 'undefined' && photos && photos.length > 0) { %>
+        <div class="row">
+            <% photos.forEach(function(p) { %>
+                <div class="col-md-3 col-sm-6 mb-4">
+                    <div class="card h-100 shadow-sm">
+                        <img src="/<%= p.path %>" class="card-img-top" alt="<%= p.employee_name %>" style="height: 200px; object-fit: cover;">
+                        <div class="card-body text-center">
+                            <h5 class="card-title"><%= p.employee_name %></h5>
+                            <p class="card-text text-muted small"><%= p.employee_code %></p>
+                            <a href="/<%= p.path %>" download class="btn btn-primary btn-sm">
+                                <i class="fas fa-download"></i> Download
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            <% }); %>
+        </div>
+    <% } else { %>
+        <div class="alert alert-info">No employee photos available yet.</div>
+    <% } %>
+</div>

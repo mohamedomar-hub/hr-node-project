@@ -1,0 +1,48 @@
+<!-- File: views/leaves/my_leaves.ejs -->
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="page-header">
+                <span class="page-label">My Workspace</span>
+                <h1 class="page-title">My Leave Requests</h1>
+            </div>
+            
+            <div class="card">
+                <div class="card-body">
+                    <% if (leaves && leaves.length > 0) { %>
+                        <div class="table-responsive">
+                            <table class="table table-bordered table-striped align-middle">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Start Date</th>
+                                        <th>End Date</th>
+                                        <th>Type</th>
+                                        <th>Reason</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <% leaves.forEach(function(row) { %>
+                                    <tr>
+                                        <td><%= row.start_date %></td>
+                                        <td><%= row.end_date %></td>
+                                        <td><span class="badge bg-info text-dark"><%= row.leave_type %></span></td>
+                                        <td><%= row.reason || '-' %></td>
+                                        <td>
+                                            <span class="badge <%= row.status === 'Approved' ? 'bg-success' : row.status === 'Rejected' ? 'bg-danger' : 'bg-warning' %>">
+                                                <%= row.status %>
+                                            </span>
+                                        </td>
+                                    </tr>
+                                    <% }); %>
+                                </tbody>
+                            </table>
+                        </div>
+                    <% } else { %>
+                        <div class="alert alert-info text-center">No leave requests yet.</div>
+                    <% } %>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

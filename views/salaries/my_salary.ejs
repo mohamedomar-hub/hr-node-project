@@ -1,0 +1,311 @@
+<!-- File: views/salaries/my_salary.ejs -->
+<% locals.pageTitle = 'My Monthly Salary'; %>
+<%
+    const salary = typeof current !== 'undefined' && current ? current : null;
+    const money = function(value) {
+        return Number(value || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    };
+    const getValue = function(primary, fallback) {
+        return salary ? (salary[primary] || salary[fallback] || 0) : 0;
+    };
+    const selectedMonthLabel = typeof selected_month !== 'undefined' && selected_month ? selected_month : '';
+%>
+
+<style>
+    .salary-shell {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+    }
+    .salary-summary {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(160px, 1fr));
+        gap: 12px;
+    }
+    .salary-stat,
+    .salary-card,
+    .salary-toolbar {
+        border: 1px solid #dbe5f0;
+        border-radius: 8px;
+        background: #ffffff;
+        box-shadow: 0 10px 24px rgba(15, 23, 42, 0.06);
+    }
+    .salary-stat {
+        min-height: 112px;
+        padding: 16px;
+    }
+    .salary-stat-icon {
+        width: 36px;
+        height: 36px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 10px;
+        margin-bottom: 10px;
+        background: #eef4ff;
+        color: #1d4ed8;
+    }
+    .salary-stat-icon.success {
+        background: #dcfce7;
+        color: #0f766e;
+    }
+    .salary-stat-icon.danger {
+        background: #fee2e2;
+        color: #dc2626;
+    }
+    .salary-stat-icon.neutral {
+        background: #f1f5f9;
+        color: #475569;
+    }
+    .salary-stat-value {
+        color: #10213a;
+        font-size: 1.35rem;
+        font-weight: 800;
+        line-height: 1.15;
+        overflow-wrap: anywhere;
+    }
+    .salary-stat-label {
+        margin-top: 5px;
+        color: #64748b;
+        font-size: 0.78rem;
+        font-weight: 800;
+        text-transform: uppercase;
+    }
+    .salary-toolbar {
+        padding: 14px 16px;
+    }
+    .salary-slip-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(320px, 1fr));
+        gap: 16px;
+    }
+    .salary-card-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 14px 16px;
+        border-bottom: 1px solid #e6edf5;
+        background: #f8fbff;
+        font-weight: 800;
+        color: #10213a;
+    }
+    .salary-card-header.allowance {
+        color: #0f766e;
+    }
+    .salary-card-header.deduction {
+        color: #dc2626;
+    }
+    .salary-card-body {
+        padding: 8px 16px 14px;
+    }
+    .salary-line {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 14px;
+        padding: 12px 0;
+        border-bottom: 1px solid #e6edf5;
+    }
+    .salary-line:last-child {
+        border-bottom: 0;
+    }
+    .salary-line-label {
+        color: #334155;
+        font-weight: 700;
+    }
+    .salary-line-value {
+        color: #10213a;
+        font-weight: 800;
+        text-align: right;
+        white-space: nowrap;
+    }
+    .salary-line.highlight {
+        margin-top: 4px;
+        padding: 13px 12px;
+        border: 0;
+        border-radius: 8px;
+        background: #f8fbff;
+    }
+    .salary-line.highlight.allowance {
+        background: #ecfdf5;
+    }
+    .salary-line.highlight.deduction {
+        background: #fff7f7;
+    }
+    .net-salary-card {
+        padding: 18px 20px;
+        border: 1px solid #bbf7d0;
+        border-radius: 8px;
+        background: #dcfce7;
+        color: #064e3b;
+        text-align: center;
+        box-shadow: 0 10px 24px rgba(15, 118, 110, 0.10);
+    }
+    .net-salary-label {
+        font-size: 0.82rem;
+        font-weight: 800;
+        text-transform: uppercase;
+    }
+    .net-salary-value {
+        margin-top: 5px;
+        font-size: 1.65rem;
+        font-weight: 900;
+    }
+    @media (max-width: 1100px) {
+        .salary-summary {
+            grid-template-columns: repeat(2, minmax(160px, 1fr));
+        }
+        .salary-slip-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+    @media (max-width: 640px) {
+        .salary-summary {
+            grid-template-columns: 1fr;
+        }
+        .salary-line {
+            align-items: flex-start;
+            flex-direction: column;
+            gap: 5px;
+        }
+        .salary-line-value {
+            text-align: left;
+        }
+    }
+</style>
+
+<div class="container-fluid salary-shell">
+    <div class="salary-summary">
+        <div class="salary-stat">
+            <div class="salary-stat-icon success"><i class="fas fa-wallet"></i></div>
+            <div class="salary-stat-value"><%= salary ? money(getValue('net_salary', 'Net Salary')) : '-' %></div>
+            <div class="salary-stat-label">Net Salary</div>
+        </div>
+        <div class="salary-stat">
+            <div class="salary-stat-icon"><i class="fas fa-chart-line"></i></div>
+            <div class="salary-stat-value"><%= salary ? money(getValue('gross_salary', 'Gross Salary')) : '-' %></div>
+            <div class="salary-stat-label">Gross Salary</div>
+        </div>
+        <div class="salary-stat">
+            <div class="salary-stat-icon danger"><i class="fas fa-circle-minus"></i></div>
+            <div class="salary-stat-value"><%= salary ? money(getValue('total_deductions', 'Total Deductions')) : '-' %></div>
+            <div class="salary-stat-label">Total Deductions</div>
+        </div>
+        <div class="salary-stat">
+            <div class="salary-stat-icon neutral"><i class="fas fa-calendar"></i></div>
+            <div class="salary-stat-value"><%= selectedMonthLabel || '-' %></div>
+            <div class="salary-stat-label">Selected Month</div>
+        </div>
+    </div>
+
+    <div class="salary-toolbar">
+        <form method="GET" action="/salary/my" class="row g-3 align-items-end">
+            <div class="col-md-4 col-lg-3">
+                <label class="form-label">Select Month</label>
+                <select name="m" class="form-select" onchange="this.form.submit()">
+                    <% if (typeof months !== 'undefined' && months && months.length > 0) { %>
+                        <% months.forEach(function(m) { %>
+                            <option value="<%= m %>" <%= selectedMonthLabel == m ? 'selected' : '' %>><%= m %></option>
+                        <% }); %>
+                    <% } else { %>
+                        <option>No months available</option>
+                    <% } %>
+                </select>
+            </div>
+            <div class="col-md-8 col-lg-9 d-flex justify-content-md-end align-items-center gap-2 flex-wrap">
+                <div class="text-muted small me-md-auto">Salary details update automatically when HR publishes a new monthly sheet.</div>
+                <% if (selectedMonthLabel) { %>
+                    <a class="btn btn-outline-secondary btn-sm" href="/salary/my/download?m=<%= encodeURIComponent(selectedMonthLabel) %>">
+                        <i class="fas fa-file-excel me-1"></i> Excel
+                    </a>
+                <% } %>
+            </div>
+        </form>
+    </div>
+
+    <% if (salary) { %>
+        <div class="salary-slip-grid">
+            <section class="salary-card">
+                <div class="salary-card-header allowance">
+                    <span><i class="fas fa-plus-circle me-2"></i>Allowances & Gross</span>
+                    <span class="text-muted small"><%= salary.month || salary.Month || selectedMonthLabel %></span>
+                </div>
+                <div class="salary-card-body">
+                    <div class="salary-line highlight allowance">
+                        <span class="salary-line-label">Gross Salary</span>
+                        <span class="salary-line-value"><%= money(getValue('gross_salary', 'Gross Salary')) %></span>
+                    </div>
+                    <div class="salary-line">
+                        <span class="salary-line-label">Basic Salary</span>
+                        <span class="salary-line-value"><%= money(getValue('basic_salary', 'Basic Salary')) %></span>
+                    </div>
+                    <div class="salary-line">
+                        <span class="salary-line-label">Car Allowance</span>
+                        <span class="salary-line-value"><%= money(getValue('car_allowance', 'Car Allowance')) %></span>
+                    </div>
+                    <div class="salary-line">
+                        <span class="salary-line-label">Transportation</span>
+                        <span class="salary-line-value"><%= money(getValue('transportation', 'Transportation')) %></span>
+                    </div>
+                    <div class="salary-line">
+                        <span class="salary-line-label">Inflation Allowance</span>
+                        <span class="salary-line-value"><%= money(getValue('inflation_allowance', 'Inflation Allowance')) %></span>
+                    </div>
+                    <div class="salary-line">
+                        <span class="salary-line-label">Mobile Allowance</span>
+                        <span class="salary-line-value"><%= money(getValue('mobile_allowance', 'Mobile Allowance')) %></span>
+                    </div>
+                    <div class="salary-line">
+                        <span class="salary-line-label">Maintenance</span>
+                        <span class="salary-line-value"><%= money(getValue('maintenance', 'Meintenance')) %></span>
+                    </div>
+                </div>
+            </section>
+
+            <section class="salary-card">
+                <div class="salary-card-header deduction">
+                    <span><i class="fas fa-minus-circle me-2"></i>Deductions</span>
+                    <span class="text-muted small"><%= salary.title || salary.Title || '' %></span>
+                </div>
+                <div class="salary-card-body">
+                    <div class="salary-line">
+                        <span class="salary-line-label">Social Ins.</span>
+                        <span class="salary-line-value"><%= money(getValue('social_ins', 'Social Ins.')) %></span>
+                    </div>
+                    <div class="salary-line">
+                        <span class="salary-line-label">Tax</span>
+                        <span class="salary-line-value"><%= money(getValue('tax', 'Tax')) %></span>
+                    </div>
+                    <div class="salary-line">
+                        <span class="salary-line-label">Medical Ins.</span>
+                        <span class="salary-line-value"><%= money(getValue('medical_ins', 'Medical Ins.')) %></span>
+                    </div>
+                    <div class="salary-line">
+                        <span class="salary-line-label">Zero Tracking</span>
+                        <span class="salary-line-value"><%= money(getValue('zero_tracking', 'Zero Tracking')) %></span>
+                    </div>
+                    <div class="salary-line">
+                        <span class="salary-line-label">KPI Bonus</span>
+                        <span class="salary-line-value"><%= money(getValue('monthly_kpis', 'Monthly KPIs')) %></span>
+                    </div>
+                    <div class="salary-line">
+                        <span class="salary-line-label">Bonus</span>
+                        <span class="salary-line-value"><%= money(getValue('bonus', 'Bonus')) %></span>
+                    </div>
+                    <div class="salary-line highlight deduction">
+                        <span class="salary-line-label">Total Deductions</span>
+                        <span class="salary-line-value"><%= money(getValue('total_deductions', 'Total Deductions')) %></span>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <div class="net-salary-card">
+            <div class="net-salary-label">Net Salary</div>
+            <div class="net-salary-value"><%= money(getValue('net_salary', 'Net Salary')) %></div>
+        </div>
+    <% } else { %>
+        <div class="alert alert-warning">No salary data found for the selected month. Please select a different month or contact HR if you believe this is an error.</div>
+    <% } %>
+</div>

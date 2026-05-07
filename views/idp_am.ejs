@@ -1,0 +1,126 @@
+<% locals.pageTitle = 'IDP & Certificate Development'; %>
+
+<%
+  const selectedDepartments = (existing && existing.selected_departments) || [];
+  const strengths = (existing && existing.strengths) || [];
+  const developmentAreas = (existing && existing.development_areas) || [];
+%>
+
+<div class="container-fluid">
+    <div class="card mb-4">
+        <div class="card-body d-flex justify-content-between align-items-center flex-wrap gap-3">
+            <div>
+                <h3 class="mb-2">IDP Plan and Certificate Development</h3>
+                <p class="mb-0 text-muted">Choose the departments you want exposure to, then define strengths, development areas, and upload your training certificates.</p>
+            </div>
+            <span class="badge bg-primary">Up to 2 departments</span>
+        </div>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-header">Development Plan</div>
+        <div class="card-body">
+            <form action="/idpAM" method="POST" id="idpAmForm">
+                <div class="row g-3 mb-4">
+                    <% departments.forEach(function(dep) { %>
+                        <div class="col-md-4 col-sm-6">
+                            <label class="d-flex align-items-center gap-2 p-3 border rounded-4 h-100">
+                                <input
+                                    class="form-check-input mt-0"
+                                    type="checkbox"
+                                    name="departments"
+                                    value="<%= dep %>"
+                                    <%= selectedDepartments.includes(dep) ? 'checked' : '' %>
+                                >
+                                <span class="fw-semibold text-dark"><%= dep %></span>
+                            </label>
+                        </div>
+                    <% }) %>
+                </div>
+
+                <div class="row g-4">
+                    <div class="col-lg-6">
+                        <label class="form-label">Strengths</label>
+                        <% for (let i = 0; i < 3; i++) { %>
+                            <input
+                                name="strength<%= i + 1 %>"
+                                class="form-control mb-3"
+                                value="<%= strengths[i] || '' %>"
+                                placeholder="Strength <%= i + 1 %>"
+                            >
+                        <% } %>
+                    </div>
+                    <div class="col-lg-6">
+                        <label class="form-label">Development Areas</label>
+                        <% for (let i = 0; i < 3; i++) { %>
+                            <input
+                                name="dev<%= i + 1 %>"
+                                class="form-control mb-3"
+                                value="<%= developmentAreas[i] || '' %>"
+                                placeholder="Development Area <%= i + 1 %>"
+                            >
+                        <% } %>
+                    </div>
+                </div>
+
+                <div class="mt-2">
+                    <label class="form-label">Agreed Action Plan</label>
+                    <textarea
+                        name="action"
+                        class="form-control"
+                        rows="5"
+                        placeholder="Add agreed steps, timeframes, and support needed"
+                    ><%= (existing && existing.action_plan) || '' %></textarea>
+                </div>
+
+                <div class="d-flex justify-content-end mt-4">
+                    <button class="btn btn-primary px-4" type="submit">Save Development Plan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">Upload Training or Course Certificate</div>
+        <div class="card-body">
+            <form action="/idpAM" method="POST" enctype="multipart/form-data" class="row g-3 align-items-end">
+                <div class="col-lg-8">
+                    <label class="form-label">Certificate File</label>
+                    <input class="form-control" type="file" name="certificate" accept=".pdf,.png,.jpg,.jpeg">
+                </div>
+                <div class="col-lg-4">
+                    <button class="btn btn-secondary w-100" type="submit">Upload Certificate</button>
+                </div>
+            </form>
+
+            <hr class="my-4">
+
+            <% if (my_certs && my_certs.length > 0) { %>
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0 align-middle">
+                        <thead>
+                            <tr>
+                                <th>File</th>
+                                <th>Uploaded At</th>
+                                <th class="text-end">Open</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <% my_certs.forEach(function(cert) { %>
+                                <tr>
+                                    <td class="fw-semibold"><%= cert.filename %></td>
+                                    <td><%= formatDisplayDate(cert.created_at) %></td>
+                                    <td class="text-end">
+                                        <a class="btn btn-sm btn-outline-primary" href="/<%= cert.path %>" target="_blank" rel="noopener noreferrer">View</a>
+                                    </td>
+                                </tr>
+                            <% }) %>
+                        </tbody>
+                    </table>
+                </div>
+            <% } else { %>
+                <div class="alert alert-info mb-0">No certificates uploaded yet.</div>
+            <% } %>
+        </div>
+    </div>
+</div>

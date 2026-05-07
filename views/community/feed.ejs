@@ -1,0 +1,69 @@
+<!-- File: views/community/feed.ejs -->
+<%- include('../base') %>
+
+<% block('content', function() { %>
+<div class="container">
+    <h2>Community Feed</h2>
+    
+    <% if (typeof user !== 'undefined' && user && user.title && user.title.toUpperCase() === 'HR') { %>
+        <a href="/community/create" class="btn btn-primary mb-3">Create Community AVS Post</a>
+    <% } %>
+
+    <% if (typeof posts === 'undefined' || !posts || posts.length === 0) { %>
+        <p>No community posts yet.</p>
+    <% } else { %>
+        <% posts.forEach(function(item) { 
+            var post = item.post; 
+        %>
+        <div class="card mb-3">
+            <div class="card-header">
+                Posted by <strong><%= post.poster_name %></strong> (<%= post.poster_code %>) • 
+                <%= post.post_type ? post.post_type.charAt(0).toUpperCase() + post.post_type.slice(1) : '' %> • 
+                <%= post.created_at %>
+                
+                <span class="float-end">❤️ <%= item.likes || 0 %></span>
+                
+                <% if (typeof user !== 'undefined' && user && user.title && user.title.toUpperCase() === 'HR') { %>
+                    <form action="/community/post/<%= post.id %>/delete" method="POST" style="display:inline; float:right; margin-right:10px;">
+                        <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+                    </form>
+                <% } %>
+            </div>
+            <div class="card-body">
+                <p><%= post.content %></p>
+                
+                <% if (item.images && item.images.length > 0) { %>
+                    <div class="row">
+                        <% item.images.forEach(function(img) { %>
+                            <div class="col-md-4">
+                                <img src="/<%= img.image_path %>" class="img-fluid rounded mb-2" alt="Post Image">
+                            </div>
+                        <% }); %>
+                    </div>
+                <% } %>
+
+                <hr>
+                <h5>Comments</h5>
+                <% if (item.comments && item.comments.length > 0) { %>
+                    <% item.comments.forEach(function(comment) { %>
+                        <div class="border-bottom pb-2 mb-2">
+                            <strong><%= comment.user_name || comment.user_code %></strong> • <small><%= comment.created_at %></small>
+                            <p><%= comment.comment %></p>
+                        </div>
+                    <% }); %>
+                <% } else { %>
+                    <p class="text-muted">No comments yet.</p>
+                <% } %>
+
+                <form action="/community/post/<%= post.id %>/comment" method="POST" class="mt-2">
+                    <div class="input-group">
+                        <input type="text" name="comment" class="form-control" placeholder="Write a comment..." required>
+                        <button type="submit" class="btn btn-outline-primary">Send</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        <% }); %>
+    <% } %>
+</div>
+<% }); %>

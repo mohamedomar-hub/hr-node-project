@@ -1,0 +1,79 @@
+<!-- File: views/salaries/all_salaries.ejs -->
+<% locals.pageTitle = 'All Employees Salaries (HR View)'; %>
+
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>All Employees Salaries</h2>
+        <a href="/salary/upload" class="btn btn-primary">
+            <i class="fas fa-upload"></i> Upload New Sheet
+        </a>
+    </div>
+
+    <% if (typeof items !== 'undefined' && items && items.length > 0) { %>
+        <div class="table-responsive">
+            <table class="table table-bordered table-striped table-hover text-center" style="font-size: 0.8rem; white-space: nowrap;">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Code</th>
+                        <th>Name</th>
+                        <th>Month</th>
+                        <th>Title</th>
+                        <th>Hiring Date</th>
+                        <th>Basic</th>
+                        <th>Car Allow.</th>
+                        <th>Transp.</th>
+                        <th>Inflation</th>
+                        <th>Mobile</th>
+                        <th>Maint.</th>
+                        <th>Gross</th>
+                        <th>Social Ins.</th>
+                        <th>Tax</th>
+                        <th>Med. Ins.</th>
+                        <th>Zero Track.</th>
+                        <th>Bonus</th>
+                        <th>Deduct.</th>
+                        <th>Total Deduct.</th>
+                        <th>KPI</th>
+                        <th>Net Salary</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% items.forEach(function(r) { 
+                        let hDate = r.hiring_date ? formatDisplayDate(r.hiring_date) : '-';
+                    %>
+                    <tr>
+                        <td><%= r.employee_code %></td>
+                        <td class="fw-bold"><%= r.employee_name || 'N/A' %></td> <!-- Display Name -->
+                        <td><%= r.month %></td>
+                        <td><%= r.title || '-' %></td>
+                        <td><%= hDate %></td>
+                        
+                        <!-- Financial Fields (Already Decrypted by Service) -->
+                        <td><%= Number(r.basic_salary || 0).toLocaleString(undefined, {minimumFractionDigits: 2}) %></td>
+                        <td><%= Number(r.car_allowance || 0).toLocaleString(undefined, {minimumFractionDigits: 2}) %></td>
+                        <td><%= Number(r.transportation || 0).toLocaleString(undefined, {minimumFractionDigits: 2}) %></td>
+                        <td><%= Number(r.inflation_allowance || 0).toLocaleString(undefined, {minimumFractionDigits: 2}) %></td>
+                        <td><%= Number(r.mobile_allowance || 0).toLocaleString(undefined, {minimumFractionDigits: 2}) %></td>
+                        <td><%= Number(r.maintenance || 0).toLocaleString(undefined, {minimumFractionDigits: 2}) %></td>
+                        
+                        <td class="fw-bold"><%= Number(r.gross_salary || 0).toLocaleString(undefined, {minimumFractionDigits: 2}) %></td>
+                        
+                        <td><%= Number(r.social_ins || 0).toLocaleString(undefined, {minimumFractionDigits: 2}) %></td>
+                        <td><%= Number(r.tax || 0).toLocaleString(undefined, {minimumFractionDigits: 2}) %></td>
+                        <td><%= Number(r.medical_ins || 0).toLocaleString(undefined, {minimumFractionDigits: 2}) %></td>
+                        <td><%= Number(r.zero_tracking || 0).toLocaleString(undefined, {minimumFractionDigits: 2}) %></td>
+                        <td><%= Number(r.bonus || 0).toLocaleString(undefined, {minimumFractionDigits: 2}) %></td>
+                        <td class="text-danger"><%= Number(r.deduction || 0).toLocaleString(undefined, {minimumFractionDigits: 2}) %></td>
+                        <td class="text-danger fw-bold"><%= Number(r.total_deductions || 0).toLocaleString(undefined, {minimumFractionDigits: 2}) %></td>
+                        <td><%= Number(r.monthly_kpis || 0).toLocaleString(undefined, {minimumFractionDigits: 2}) %></td>
+                        
+                        <td class="fw-bold text-success"><%= Number(r.net_salary || 0).toLocaleString(undefined, {minimumFractionDigits: 2}) %></td>
+                    </tr>
+                    <% }); %>
+                </tbody>
+            </table>
+        </div>
+    <% } else { %>
+        <div class="alert alert-info">No salary data available. Please upload an Excel file.</div>
+    <% } %>
+</div>

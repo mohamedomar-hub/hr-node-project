@@ -1,0 +1,194 @@
+<% locals.pageTitle = 'Employee Development'; %>
+
+<div class="container-fluid">
+    <div class="card mb-4">
+        <div class="card-body d-flex justify-content-between align-items-center flex-wrap gap-3">
+            <div>
+                <h3 class="mb-2">HR Development Dashboard</h3>
+                <p class="mb-0 text-muted">Review all uploaded training certificates and all submitted IDP reports from employees.</p>
+            </div>
+            <div class="d-flex gap-2 flex-wrap">
+                <% if (hide) { %>
+                    <a class="btn btn-outline-success" href="/hr_dev?show=1">Show Data</a>
+                <% } else { %>
+                    <a class="btn btn-outline-secondary" href="/hr_dev?clear=1">Hide Current View</a>
+                <% } %>
+                <a class="btn btn-primary" href="/hr_dev/export">Download Excel</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4 mb-4">
+        <div class="col-md-4">
+            <div class="card h-100">
+                <div class="card-body">
+                    <span class="page-label">Certificates</span>
+                    <h2 class="mt-2 mb-1"><%= stats && typeof stats.certificates !== 'undefined' ? stats.certificates : 0 %></h2>
+                    <p class="mb-0 text-muted">Uploaded training and course certificates.</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card h-100">
+                <div class="card-body">
+                    <span class="page-label">IDP Reports</span>
+                    <h2 class="mt-2 mb-1"><%= stats && typeof stats.reports !== 'undefined' ? stats.reports : 0 %></h2>
+                    <p class="mb-0 text-muted">Saved individual development plans submitted by employees.</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card h-100">
+                <div class="card-body">
+                    <span class="page-label">Self Dev Entries</span>
+                    <h2 class="mt-2 mb-1"><%= stats && typeof stats.selfDev !== 'undefined' ? stats.selfDev : 0 %></h2>
+                    <p class="mb-0 text-muted">Entries and attachments uploaded from the Self Development page.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <% if (hide) { %>
+        <div class="alert alert-info">The HR development view is hidden. Use <strong>Show Data</strong> to display new records again.</div>
+    <% } else { %>
+        <div class="card mb-4">
+            <div class="card-header">Uploaded Certificates</div>
+            <div class="card-body p-0">
+                <% if (certs && certs.length > 0) { %>
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0 align-middle">
+                            <thead>
+                                <tr>
+                                    <th>Employee</th>
+                                    <th>Code</th>
+                                    <th>File</th>
+                                    <th>Uploaded At</th>
+                                    <th class="text-end">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <% certs.forEach(function(cert) { %>
+                                    <tr>
+                                        <td class="fw-semibold"><%= cert.employee_name %></td>
+                                        <td><%= cert.employee_code %></td>
+                                        <td><%= cert.filename %></td>
+                                        <td><%= formatDisplayDate(cert.created_at) %></td>
+                                        <td class="text-end">
+                                            <div class="d-flex justify-content-end gap-2 flex-wrap">
+                                                <a class="btn btn-sm btn-outline-primary" href="/hr_dev/certificate/<%= cert.id %>" target="_blank" rel="noopener noreferrer">View</a>
+                                                <form action="/hr_dev/certificate/<%= cert.id %>/delete" method="POST" class="m-0" onsubmit="return confirm('Delete this certificate?');">
+                                                    <button class="btn btn-sm btn-danger" type="submit">Delete</button>
+                                                </form>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                <% }) %>
+                            </tbody>
+                        </table>
+                    </div>
+                <% } else { %>
+                    <div class="p-4">
+                        <div class="alert alert-info mb-0">No certificates uploaded yet.</div>
+                    </div>
+                <% } %>
+            </div>
+        </div>
+
+        <div class="card mb-4">
+            <div class="card-header">Self Development Entries</div>
+            <div class="card-body p-0">
+                <% if (self_dev_entries && self_dev_entries.length > 0) { %>
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0 align-middle">
+                            <thead>
+                                <tr>
+                                    <th>Employee</th>
+                                    <th>Goal</th>
+                                    <th>Skills</th>
+                                    <th>Plan</th>
+                                    <th>Created At</th>
+                                    <th class="text-end">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <% self_dev_entries.forEach(function(entry) { %>
+                                    <tr>
+                                        <td class="fw-semibold">
+                                            <%= entry.employee_name %>
+                                            <div class="text-muted small"><%= entry.employee_code %></div>
+                                        </td>
+                                        <td style="white-space: pre-line;"><%= entry.goal || '-' %></td>
+                                        <td style="white-space: pre-line;"><%= entry.skills || '-' %></td>
+                                        <td style="white-space: pre-line; min-width: 260px;"><%= entry.plan || '-' %></td>
+                                        <td><%= formatDisplayDate(entry.created_at) %></td>
+                                        <td class="text-end">
+                                            <div class="d-flex justify-content-end gap-2 flex-wrap">
+                                                <% if (entry.attachment) { %>
+                                                    <a class="btn btn-sm btn-outline-primary" href="/hr_dev/self_dev/<%= entry.id %>/file" target="_blank" rel="noopener noreferrer">View</a>
+                                                <% } %>
+                                                <form action="/hr_dev/self_dev/<%= entry.id %>/delete" method="POST" class="m-0" onsubmit="return confirm('Delete this self development entry?');">
+                                                    <button class="btn btn-sm btn-danger" type="submit">Delete</button>
+                                                </form>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                <% }) %>
+                            </tbody>
+                        </table>
+                    </div>
+                <% } else { %>
+                    <div class="p-4">
+                        <div class="alert alert-info mb-0">No self development entries yet.</div>
+                    </div>
+                <% } %>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">IDP Reports</div>
+            <div class="card-body p-0">
+                <% if (idp_reports && idp_reports.length > 0) { %>
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0 align-middle">
+                            <thead>
+                                <tr>
+                                    <th>Employee</th>
+                                    <th>Departments</th>
+                                    <th>Strengths</th>
+                                    <th>Development Areas</th>
+                                    <th>Action Plan</th>
+                                    <th>Updated At</th>
+                                    <th class="text-end">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <% idp_reports.forEach(function(report) { %>
+                                    <tr>
+                                        <td class="fw-semibold">
+                                            <%= report.employee_name %>
+                                            <div class="text-muted small"><%= report.employee_code %></div>
+                                        </td>
+                                        <td style="white-space: pre-line;"><%= (report.selected_departments || []).join(', ') || '-' %></td>
+                                        <td style="white-space: pre-line;"><%= (report.strengths || []).join('\n') || '-' %></td>
+                                        <td style="white-space: pre-line;"><%= (report.development_areas || []).join('\n') || '-' %></td>
+                                        <td style="white-space: pre-line; min-width: 280px;"><%= report.action_plan || '-' %></td>
+                                        <td><%= formatDisplayDate(report.updated_at) %></td>
+                                        <td class="text-end">
+                                            <form action="/hr_dev/idp/<%= report.employee_code %>/delete" method="POST" class="m-0 d-inline-block" onsubmit="return confirm('Delete this IDP report?');">
+                                                <button class="btn btn-sm btn-danger" type="submit">Delete</button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                <% }) %>
+                            </tbody>
+                        </table>
+                    </div>
+                <% } else { %>
+                    <div class="p-4">
+                        <div class="alert alert-info mb-0">No IDP reports saved yet.</div>
+                    </div>
+                <% } %>
+            </div>
+        </div>
+    <% } %>
+</div>

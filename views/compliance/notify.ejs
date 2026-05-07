@@ -1,0 +1,47 @@
+<!-- File: views/compliance/notify.ejs -->
+<% locals.pageTitle = 'Notify Compliance'; %>
+
+<div class="container">
+    <h2><i class="fas fa-shield-alt me-2"></i>Notify Compliance</h2>
+    <p class="text-muted">Send a compliance-related message to the Compliance Team. A copy will also be sent to your direct manager.</p>
+
+    <!-- Flash Messages -->
+    <% if (typeof messages !== 'undefined' && messages) { %>
+        <% if (messages.success) { %><div class="alert alert-success"><%= messages.success %></div><% } %>
+        <% if (messages.danger) { %><div class="alert alert-danger"><%= messages.danger %></div><% } %>
+    <% } %>
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <form action="/notify_compliance" method="POST">
+                
+                <!-- Compliance Team Dropdown -->
+                <div class="mb-3">
+                    <label for="compliance_recipient" class="form-label">Select Compliance Member:</label>
+                    <select name="compliance_code" id="compliance_recipient" class="form-select" required>
+                        <option value="" disabled selected>-- Choose a Compliance Member --</option>
+                        <% if (typeof compliance_team !== 'undefined' && compliance_team && compliance_team.length > 0) { %>
+                            <% compliance_team.forEach(function(member) { %>
+                                <option value="<%= member.employee_code %>">
+                                    <%= member.employee_name %> - <%= member.title %>
+                                </option>
+                            <% }); %>
+                        <% } else { %>
+                            <option value="" disabled>No compliance members found.</option>
+                        <% } %>
+                    </select>
+                </div>
+
+                <!-- Message -->
+                <div class="mb-3">
+                    <label for="message" class="form-label">Your Message:</label>
+                    <textarea name="message" id="message" class="form-control" rows="5" placeholder="Write your compliance inquiry or report here..." required></textarea>
+                </div>
+
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="fas fa-paper-plane"></i> Send Message
+                </button>
+            </form>
+        </div>
+    </div>
+</div>

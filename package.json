@@ -1,0 +1,35 @@
+{
+  "name": "hr-node-project",
+  "version": "1.0.0",
+  "description": "HR Management System - Node.js Production Build",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js",
+    "dev": "nodemon app.js"
+  },
+  "keywords": [
+    "hr",
+    "nodejs",
+    "mysql",
+    "express"
+  ],
+  "author": "Mohamed Abd el Ghany",
+  "license": "ISC",
+  "dependencies": {
+    "bcrypt": "^6.0.0",
+    "connect-flash": "^0.1.1",
+    "cors": "^2.8.6",
+    "dotenv": "^17.4.2",
+    "ejs": "^5.0.2",
+    "exceljs": "^4.4.0",
+    "express": "^5.2.1",
+    "express-ejs-layouts": "^2.5.1",
+    "express-mysql-session": "^3.0.3",
+    "express-session": "^1.19.0",
+    "multer": "^2.1.1",
+    "mysql2": "^3.22.0",
+    "pdfkit": "^0.18.0",
+    "uuid": "^13.0.0",
+    "xlsx": "^0.18.5"
+  }
+}

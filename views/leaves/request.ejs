@@ -1,0 +1,43 @@
+<!-- File: views/leaves/request.ejs -->
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <div class="page-header">
+                <span class="page-label">Leave Management</span>
+                <h1 class="page-title">Request New Leave</h1>
+            </div>
+            
+            <div class="card">
+                <div class="card-body p-4">
+                    <form action="/leaves" method="POST">
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Start Date</label>
+                                <input type="date" name="start" class="form-control" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">End Date</label>
+                                <input type="date" name="end" class="form-control" required>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Leave Type</label>
+                            <select name="type" class="form-select">
+                                <option value="Annual">Annual</option>
+                                <option value="Sick">Sick</option>
+                                <option value="Emergency">Emergency</option>
+                                <option value="Unpaid">Unpaid</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Reason</label>
+                            <textarea name="reason" class="form-control" rows="3"></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary px-4">Submit Request</button>
+                        <a href="/leaves" class="btn btn-secondary px-4 ms-2">Cancel</a>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

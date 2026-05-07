@@ -1,0 +1,178 @@
+<!-- File: views/expenses/new_expense.ejs -->
+<% locals.pageTitle = 'New Expense Request'; %>
+
+<div class="container">
+    <h2>New Expense Request</h2>
+    
+    <form action="/expense/new" method="POST" enctype="multipart/form-data" id="expenseForm">
+        <div id="items-container">
+            <!-- Item Row Template -->
+            <div class="card mb-3 expense-item">
+                <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                    <span>Expense Item #1</span>
+                    <button type="button" class="btn btn-danger btn-sm remove-item" style="display:none;"><i class="fas fa-trash"></i></button>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <!-- Locations -->
+                        <div class="col-md-6">
+                            <label class="form-label small">From</label>
+                            <input type="text" name="from_location[]" class="form-control form-control-sm" placeholder="e.g., Alexandria" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small">To</label>
+                            <input type="text" name="to_location[]" class="form-control form-control-sm" placeholder="e.g., Cairo" required>
+                        </div>
+
+                        <!-- Date & Days -->
+                        <div class="col-md-4">
+                            <label class="form-label small">Date</label>
+                            <input type="date" name="expense_date[]" class="form-control form-control-sm" required>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label small">Days</label>
+                            <input type="number" name="days_count[]" class="form-control form-control-sm days-input" value="1" min="1" required>
+                        </div>
+
+                        <!-- Type (Only Allowance & Accommodation) -->
+                        <div class="col-md-3">
+                            <label class="form-label small">Type</label>
+                            <select name="expense_type[]" class="form-select form-select-sm type-select" required>
+                                <option value="Daily Allowance">Daily Allowance</option>
+                                <option value="Accommodation">Accommodation</option>
+                            </select>
+                        </div>
+                        
+                        <!-- Calculated Amount (Readonly) -->
+                        <div class="col-md-3">
+                            <label class="form-label small">Allowance Amount (EGP)</label>
+                            <input type="number" step="0.01" name="amount[]" class="form-control form-control-sm amount-input" readonly>
+                        </div>
+
+                        <!-- NEW: Separate Transportation Field -->
+                        <div class="col-md-3">
+                            <label class="form-label small">Transportation Cost (Optional)</label>
+                            <input type="number" step="0.01" name="transport_cost[]" class="form-control form-control-sm transport-input" placeholder="0.00" value="0">
+                        </div>
+
+                        <!-- Description & Attachment -->
+                        <div class="col-md-9">
+                            <label class="form-label small">Description</label>
+                            <textarea name="description[]" class="form-control form-control-sm" rows="1" placeholder="Details..."></textarea>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label small">Attachment (Img/PDF)</label>
+                            <input type="file" name="attachments[]" class="form-control form-control-sm" accept="image/*,.pdf">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <button type="button" id="add-item-btn" class="btn btn-success mb-4"><i class="fas fa-plus"></i> Add Another Item</button>
+
+        <div class="card bg-primary text-white mb-4">
+            <div class="card-body d-flex justify-content-between align-items-center">
+                <h4 class="mb-0">Total Amount (Allowance + Transport):</h4>
+                <h2 class="mb-0" id="grand-total">0.00 EGP</h2>
+            </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary w-100">Submit All Requests</button>
+    </form>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const container = document.getElementById('items-container');
+        const addItemBtn = document.getElementById('add-item-btn');
+        const grandTotalEl = document.getElementById('grand-total');
+
+        // Function to update Allowance Amount based on Days & Type
+        function updateRowLogic(row) {
+            const days = parseInt(row.querySelector('.days-input').value) || 1;
+            const typeSelect = row.querySelector('.type-select');
+            const amountInput = row.querySelector('.amount-input');
+            
+            let amount = 0;
+            const currentType = typeSelect.value;
+
+            if (currentType === 'Daily Allowance') {
+                amount = 150 * days;
+            } else if (currentType === 'Accommodation') {
+                amount = 300 * days;
+            }
+
+            amountInput.value = amount.toFixed(2);
+            updateGrandTotal();
+        }
+
+        // Function to calculate Grand Total (Sum of Allowance + Transport for all items)
+        function updateGrandTotal() {
+            let total = 0;
+            
+            // Sum Allowance Amounts
+            document.querySelectorAll('.amount-input').forEach(input => {
+                total += parseFloat(input.value) || 0;
+            });
+
+            // Sum Transportation Costs
+            document.querySelectorAll('.transport-input').forEach(input => {
+                total += parseFloat(input.value) || 0;
+            });
+
+            grandTotalEl.textContent = total.toFixed(2) + ' EGP';
+        }
+
+        // Event Listeners for Changes
+        container.addEventListener('change', function(e) {
+            if (e.target.classList.contains('days-input') || e.target.classList.contains('type-select')) {
+                updateRowLogic(e.target.closest('.expense-item'));
+            }
+        });
+
+        // Listener for manual input in Transportation or Allowance (if needed later)
+        container.addEventListener('input', function(e) {
+            if (e.target.classList.contains('transport-input') || e.target.classList.contains('amount-input')) {
+                updateGrandTotal();
+            }
+        });
+
+        // Add New Item Button
+        addItemBtn.addEventListener('click', function() {
+            const firstItem = container.querySelector('.expense-item');
+            const newItem = firstItem.cloneNode(true);
+            
+            // Reset values
+            newItem.querySelectorAll('input').forEach(input => {
+                if(input.type !== 'date') input.value = (input.classList.contains('transport-input') ? '0' : ''); 
+                else input.value = new Date().toISOString().split('T')[0];
+            });
+            newItem.querySelector('textarea').value = '';
+            newItem.querySelector('.type-select').value = 'Daily Allowance';
+            newItem.querySelector('.days-input').value = '1';
+            newItem.querySelector('.remove-item').style.display = 'block';
+            
+            const count = container.querySelectorAll('.expense-item').length + 1;
+            newItem.querySelector('.card-header span').textContent = `Expense Item #${count}`;
+
+            container.appendChild(newItem);
+            updateRowLogic(newItem); // Initial calculation
+        });
+
+        // Remove Item Button
+        container.addEventListener('click', function(e) {
+            if (e.target.closest('.remove-item')) {
+                e.target.closest('.expense-item').remove();
+                // Renumber items
+                container.querySelectorAll('.expense-item').forEach((item, index) => {
+                    item.querySelector('.card-header span').textContent = `Expense Item #${index + 1}`;
+                });
+                updateGrandTotal();
+            }
+        });
+
+        // Initial Calculation for the first item
+        updateRowLogic(container.querySelector('.expense-item'));
+    });
+</script>

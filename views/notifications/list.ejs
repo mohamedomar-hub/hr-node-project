@@ -1,0 +1,235 @@
+<!-- File: views/notifications/list.ejs -->
+<% locals.pageTitle = 'Notifications'; %>
+
+<style>
+  .notification-item {
+    border-left: 4px solid #ccc;
+    transition: all 0.3s ease;
+    position: relative;
+  }
+  
+  .notification-item.unread {
+    border-left-color: #0d6efd;
+    background-color: #f0f7ff;
+  }
+  
+  .notification-item:hover {
+    background-color: #f8f9fa;
+    transform: translateX(4px);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  }
+  
+  .notification-item.saved {
+    border-left-color: #198754;
+  }
+  
+  .notification-checkbox {
+    cursor: pointer;
+  }
+  
+  .notification-actions {
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+  
+  .notification-item:hover .notification-actions {
+    opacity: 1;
+  }
+  
+  .notification-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: bold;
+    font-size: 16px;
+  }
+  
+  .batch-actions {
+    display: none;
+    gap: 10px;
+  }
+  
+  .batch-actions.show {
+    display: flex;
+  }
+</style>
+
+<div class="container" style="max-width: 980px;">
+    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+        <div>
+            <h2 class="mb-0"><i class="fas fa-bell me-2"></i>Notifications</h2>
+            <div class="text-muted small">
+              Unread: <strong><%= typeof unreadCount !== 'undefined' ? unreadCount : 0 %></strong>
+            </div>
+        </div>
+        <div class="d-flex gap-2 batch-actions" id="batch-actions">
+          <button class="btn btn-danger btn-sm" id="batch-delete-btn">
+            <i class="fas fa-trash me-1"></i>Delete Selected
+          </button>
+          <button class="btn btn-secondary btn-sm" onclick="document.querySelectorAll('.notification-checkbox').forEach(c => c.checked = false); updateBatchActions();">
+            Cancel
+          </button>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="/notifications/mark_all" class="btn btn-outline-primary btn-sm">
+              <i class="fas fa-check-circle me-1"></i>Mark all as read
+            </a>
+        </div>
+    </div>
+
+    <% if (typeof rows !== 'undefined' && rows && rows.length > 0) { %>
+        <div class="list-group">
+            <% rows.forEach(function(r, idx) { 
+                const created = (r.created_at ? String(r.created_at).replace('T',' ').slice(0,16) : '');
+                const itemHref = `/notifications/open/${r.id}`;
+                const initials = (r.message ? r.message.substring(0, 2).toUpperCase() : 'N');
+            %>
+                <div class="list-group-item notification-item <%= !r.is_read ? 'unread' : '' %> <%= r.saved_for_later ? 'saved' : '' %>" style="padding: 12px 15px;">
+                    <div class="d-flex w-100 align-items-start gap-2">
+                      <!-- Checkbox -->
+                      <input type="checkbox" class="notification-checkbox form-check-input mt-1" 
+                             data-id="<%= r.id %>" onchange="updateBatchActions()">
+                      
+                      <!-- Avatar -->
+                      <div class="notification-avatar" style="flex-shrink: 0;">
+                        <%= initials %>
+                      </div>
+                      
+                      <!-- Content -->
+                      <div class="flex-grow-1 min-width-0">
+                        <div class="d-flex justify-content-between align-items-start gap-2 flex-wrap">
+                          <div class="flex-grow-1">
+                            <a href="<%= itemHref %>" class="text-decoration-none text-dark fw-<%= !r.is_read ? 'bold' : 'normal' %>">
+                              <div class="mb-1">
+                                <% if (!r.is_read) { %>
+                                  <span class="badge bg-primary me-2">New</span>
+                                <% } %>
+                                <% if (r.saved_for_later) { %>
+                                  <span class="badge bg-success me-2"><i class="fas fa-bookmark me-1"></i>Saved</span>
+                                <% } %>
+                                <% if (r.category) { %>
+                                  <span class="badge bg-light text-dark"><%= r.category %></span>
+                                <% } %>
+                              </div>
+                              <div class="text-break"><%= r.message %></div>
+                            </a>
+                            <div class="small text-muted mt-1"><i class="fas fa-clock me-1"></i><%= created %></div>
+                          </div>
+                          <small class="text-muted text-nowrap">ID: <%= r.id %></small>
+                        </div>
+                      </div>
+                      
+                      <!-- Action Buttons -->
+                      <div class="notification-actions d-flex gap-1 flex-shrink-0">
+                        <button class="btn btn-sm btn-outline-info save-btn" 
+                                title="Save for later"
+                                data-id="<%= r.id %>">
+                          <i class="fas fa-<%= r.saved_for_later ? 'bookmark' : 'star' %>"></i>
+                        </button>
+                        <button class="btn btn-sm btn-outline-danger delete-btn" 
+                                title="Delete"
+                                data-id="<%= r.id %>">
+                          <i class="fas fa-trash"></i>
+                        </button>
+                      </div>
+                    </div>
+                </div>
+            <% }); %>
+        </div>
+    <% } else { %>
+        <div class="alert alert-info text-center">
+          <i class="fas fa-inbox" style="font-size: 48px; opacity: 0.5;"></i>
+          <div class="mt-3">No notifications yet. Stay tuned!</div>
+        </div>
+    <% } %>
+</div>
+
+<script>
+  // Attach event listeners for delete buttons
+  document.querySelectorAll('.delete-btn').forEach(btn => {
+    btn.addEventListener('click', async (e) => {
+      e.preventDefault();
+      if (!confirm('Delete this notification?')) return;
+      const id = btn.dataset.id;
+      try {
+        const res = await fetch(`/notifications/${id}`, { method: 'DELETE' });
+        const data = await res.json();
+        if (res.ok && data.success) {
+          location.reload();
+        } else {
+          alert('Failed to delete notification');
+        }
+      } catch (e) {
+        console.error('Error:', e);
+        alert('Error deleting notification');
+      }
+    });
+  });
+  
+  // Attach event listeners for save buttons
+  document.querySelectorAll('.save-btn').forEach(btn => {
+    btn.addEventListener('click', async (e) => {
+      e.preventDefault();
+      const id = btn.dataset.id;
+      try {
+        const res = await fetch(`/notifications/${id}/save`, { method: 'POST' });
+        const data = await res.json();
+        if (res.ok && data.success) {
+          location.reload();
+        } else {
+          alert('Failed to update notification');
+        }
+      } catch (e) {
+        console.error('Error:', e);
+        alert('Error updating notification');
+      }
+    });
+  });
+  
+  function updateBatchActions() {
+    const checkedCount = document.querySelectorAll('.notification-checkbox:checked').length;
+    const batchActions = document.getElementById('batch-actions');
+    if (checkedCount > 0) {
+      batchActions.classList.add('show');
+      document.getElementById('batch-delete-btn').textContent = 
+        `Delete ${checkedCount} selected`;
+    } else {
+      batchActions.classList.remove('show');
+    }
+  }
+  
+  document.getElementById('batch-delete-btn')?.addEventListener('click', async () => {
+    const ids = Array.from(document.querySelectorAll('.notification-checkbox:checked'))
+      .map(c => c.dataset.id);
+    
+    if (ids.length === 0) {
+      alert('Please select notifications to delete');
+      return;
+    }
+    
+    if (!confirm(`Delete ${ids.length} selected notification(s)?`)) return;
+    
+    try {
+      const res = await fetch('/notifications/batch-delete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ids })
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        location.reload();
+      } else {
+        alert('Failed to delete notifications');
+      }
+    } catch (e) {
+      console.error('Error:', e);
+      alert('Error deleting notifications');
+    }
+  });
+</script>
+

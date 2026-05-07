@@ -1,0 +1,678 @@
+<% locals.pageTitle = 'Company Structure'; %>
+
+<style>
+    .structure-shell {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+    }
+    .structure-stats {
+        display: grid;
+        grid-template-columns: repeat(5, minmax(140px, 1fr));
+        gap: 12px;
+    }
+    .structure-stat {
+        min-height: 92px;
+        padding: 15px;
+        border: 1px solid #dbe5f0;
+        border-radius: 8px;
+        background: #ffffff;
+        box-shadow: 0 10px 24px rgba(15, 23, 42, 0.06);
+    }
+    .structure-stat-icon {
+        width: 34px;
+        height: 34px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 10px;
+        background: #eef4ff;
+        color: #1d4ed8;
+        margin-bottom: 8px;
+    }
+    .structure-stat-value {
+        color: #10213a;
+        font-size: 1.35rem;
+        font-weight: 800;
+        line-height: 1;
+    }
+    .structure-stat-label {
+        margin-top: 5px;
+        color: #64748b;
+        font-size: 0.78rem;
+        font-weight: 700;
+        text-transform: uppercase;
+    }
+    .structure-toolbar,
+    .structure-card {
+        border: 1px solid #dbe5f0;
+        border-radius: 8px;
+        background: #ffffff;
+        box-shadow: 0 10px 24px rgba(15, 23, 42, 0.06);
+    }
+    .structure-toolbar {
+        padding: 14px;
+    }
+    .structure-tabs {
+        display: inline-flex;
+        gap: 4px;
+        padding: 5px;
+        border: 1px solid #dbe5f0;
+        border-radius: 12px;
+        background: #f8fbff;
+    }
+    .structure-tabs .nav-link {
+        min-height: 38px;
+        padding: 0.55rem 0.9rem;
+        border: 0;
+        border-radius: 8px;
+        color: #475569;
+        font-weight: 800;
+        font-size: 0.85rem;
+    }
+    .structure-tabs .nav-link.active {
+        background: #ffffff;
+        color: #1d4ed8;
+        box-shadow: 0 8px 18px rgba(15, 23, 42, 0.08);
+    }
+    .structure-card-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 14px 16px;
+        border-bottom: 1px solid #e6edf5;
+        background: #f8fbff;
+        font-weight: 800;
+    }
+    .structure-table-wrap {
+        max-height: 64vh;
+        overflow: auto;
+    }
+    .structure-table-wrap thead th {
+        position: sticky;
+        top: 0;
+        z-index: 2;
+    }
+    .structure-row {
+        cursor: pointer;
+    }
+    .structure-row:hover {
+        background: #eef4ff !important;
+    }
+    .missing-data {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        color: #b45309;
+        font-weight: 700;
+    }
+    .org-tree {
+        padding: 16px;
+        max-height: 64vh;
+        overflow: auto;
+        transform-origin: top left;
+    }
+    .org-tree-stage {
+        max-height: 64vh;
+        overflow: auto;
+        background: linear-gradient(90deg, rgba(219, 229, 240, 0.45) 1px, transparent 1px),
+                    linear-gradient(180deg, rgba(219, 229, 240, 0.45) 1px, transparent 1px);
+        background-size: 28px 28px;
+    }
+    .tree-tools {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+    .tree-node {
+        margin: 0 0 10px;
+        padding-left: 18px;
+        border-left: 2px solid #dbe5f0;
+    }
+    .tree-node-root {
+        padding-left: 0;
+        border-left: 0;
+    }
+    .tree-person {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 10px 12px;
+        border: 1px solid #e6edf5;
+        border-radius: 8px;
+        background: #ffffff;
+        cursor: pointer;
+    }
+    .tree-person:hover {
+        border-color: #bfdbfe;
+        background: #f8fbff;
+    }
+    .tree-person.match {
+        border-color: #2563eb;
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.14);
+    }
+    .tree-toggle {
+        width: 30px;
+        height: 30px;
+        flex: 0 0 auto;
+        border: 1px solid #dbe5f0;
+        border-radius: 8px;
+        background: #ffffff;
+        color: #475569;
+    }
+    .tree-children.collapsed {
+        display: none;
+    }
+    .tree-person-main {
+        min-width: 0;
+    }
+    .tree-person-name {
+        color: #10213a;
+        font-weight: 800;
+        overflow-wrap: anywhere;
+    }
+    .tree-person-meta {
+        color: #64748b;
+        font-size: 0.78rem;
+    }
+    .tree-count {
+        flex: 0 0 auto;
+        border-radius: 999px;
+        padding: 4px 9px;
+        background: #eef4ff;
+        color: #1d4ed8;
+        font-size: 0.75rem;
+        font-weight: 800;
+    }
+    .quick-view-backdrop {
+        position: fixed;
+        inset: 0;
+        display: none;
+        background: rgba(15, 23, 42, 0.28);
+        z-index: 1090;
+    }
+    .quick-view-backdrop.open {
+        display: block;
+    }
+    .quick-view-panel {
+        position: fixed;
+        top: 18px;
+        right: 18px;
+        bottom: 18px;
+        width: min(420px, calc(100vw - 36px));
+        display: flex;
+        flex-direction: column;
+        border: 1px solid #dbe5f0;
+        border-radius: 8px;
+        background: #ffffff;
+        box-shadow: 0 24px 56px rgba(15, 23, 42, 0.24);
+        transform: translateX(calc(100% + 30px));
+        transition: transform 0.22s ease;
+        z-index: 1100;
+    }
+    .quick-view-panel.open {
+        transform: translateX(0);
+    }
+    .quick-view-header {
+        padding: 16px;
+        border-bottom: 1px solid #e6edf5;
+        background: #f8fbff;
+    }
+    .quick-view-body {
+        padding: 16px;
+        overflow-y: auto;
+    }
+    .quick-avatar {
+        width: 58px;
+        height: 58px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        background: #1f3352;
+        color: #ffffff;
+        font-weight: 800;
+        font-size: 1.1rem;
+        flex: 0 0 auto;
+    }
+    .quick-field {
+        padding: 12px 0;
+        border-bottom: 1px solid #e6edf5;
+    }
+    .quick-label {
+        color: #64748b;
+        font-size: 0.76rem;
+        font-weight: 800;
+        text-transform: uppercase;
+    }
+    .quick-value {
+        margin-top: 3px;
+        color: #10213a;
+        font-weight: 700;
+        overflow-wrap: anywhere;
+    }
+    @media (max-width: 1100px) {
+        .structure-stats {
+            grid-template-columns: repeat(2, minmax(150px, 1fr));
+        }
+    }
+    @media (max-width: 640px) {
+        .structure-stats {
+            grid-template-columns: 1fr;
+        }
+        .structure-tabs {
+            width: 100%;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+        }
+    }
+</style>
+
+<div class="container-fluid structure-shell">
+    <div class="structure-stats">
+        <div class="structure-stat">
+            <div class="structure-stat-icon"><i class="fas fa-users"></i></div>
+            <div class="structure-stat-value" id="statTotal">0</div>
+            <div class="structure-stat-label">Total Employees</div>
+        </div>
+        <div class="structure-stat">
+            <div class="structure-stat-icon"><i class="fas fa-user"></i></div>
+            <div class="structure-stat-value" id="statMR">0</div>
+            <div class="structure-stat-label">MRs</div>
+        </div>
+        <div class="structure-stat">
+            <div class="structure-stat-icon"><i class="fas fa-user-tie"></i></div>
+            <div class="structure-stat-value" id="statAM">0</div>
+            <div class="structure-stat-label">AMs</div>
+        </div>
+        <div class="structure-stat">
+            <div class="structure-stat-icon"><i class="fas fa-user-shield"></i></div>
+            <div class="structure-stat-value" id="statDM">0</div>
+            <div class="structure-stat-label">DMs</div>
+        </div>
+        <div class="structure-stat">
+            <div class="structure-stat-icon"><i class="fas fa-building"></i></div>
+            <div class="structure-stat-value" id="statDepartments">0</div>
+            <div class="structure-stat-label">Departments</div>
+        </div>
+    </div>
+
+    <div class="structure-toolbar">
+        <div class="row g-3 align-items-end">
+            <div class="col-lg-4">
+                <label class="form-label">Search</label>
+                <div class="input-group">
+                    <span class="input-group-text"><i class="fas fa-search"></i></span>
+                    <input id="structureSearch" class="form-control" type="search" placeholder="Name, code, title, department, manager">
+                </div>
+            </div>
+            <div class="col-lg-2 col-md-4">
+                <label class="form-label">Department</label>
+                <select id="departmentFilter" class="form-select">
+                    <option value="">All departments</option>
+                </select>
+            </div>
+            <div class="col-lg-2 col-md-4">
+                <label class="form-label">Title</label>
+                <select id="titleFilter" class="form-select">
+                    <option value="">All titles</option>
+                </select>
+            </div>
+            <div class="col-lg-2 col-md-4">
+                <label class="form-label">Manager</label>
+                <select id="managerFilter" class="form-select">
+                    <option value="">All managers</option>
+                </select>
+            </div>
+            <div class="col-lg-2">
+                <button id="clearFiltersBtn" class="btn btn-outline-secondary w-100" type="button"><i class="fas fa-rotate-left me-2"></i>Reset</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+        <ul class="nav structure-tabs" id="structureTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="tab-table-btn" data-bs-toggle="tab" data-bs-target="#tab-table" type="button" role="tab" aria-controls="tab-table" aria-selected="true">
+                    <i class="fas fa-table me-2"></i>Table
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="tab-tree-btn" data-bs-toggle="tab" data-bs-target="#tab-tree" type="button" role="tab" aria-controls="tab-tree" aria-selected="false">
+                    <i class="fas fa-sitemap me-2"></i>Org Tree
+                </button>
+            </li>
+        </ul>
+        <div class="text-muted small"><span id="visibleCount">0</span> visible employees</div>
+    </div>
+
+    <div class="tab-content">
+        <div class="tab-pane fade show active" id="tab-table" role="tabpanel" aria-labelledby="tab-table-btn" tabindex="0">
+            <section class="structure-card">
+                <div class="structure-card-header">
+                    <span>Employee Directory</span>
+                    <span class="text-muted small">Click any row for details</span>
+                </div>
+                <div class="table-responsive structure-table-wrap">
+                    <table class="table table-hover table-striped mb-0 text-center align-middle">
+                        <thead>
+                            <tr>
+                                <th>Code</th>
+                                <th>Name</th>
+                                <th>Title</th>
+                                <th>Department</th>
+                                <th>Manager Name</th>
+                                <th>Mobile</th>
+                            </tr>
+                        </thead>
+                        <tbody id="structureTableBody"></tbody>
+                    </table>
+                </div>
+            </section>
+        </div>
+        <div class="tab-pane fade" id="tab-tree" role="tabpanel" aria-labelledby="tab-tree-btn" tabindex="0">
+            <section class="structure-card">
+                <div class="structure-card-header">
+                    <span>Organization Tree</span>
+                    <div class="tree-tools">
+                        <button id="treeZoomOut" class="btn btn-light btn-sm" type="button" title="Zoom out"><i class="fas fa-minus"></i></button>
+                        <span id="treeZoomLabel" class="text-muted small">100%</span>
+                        <button id="treeZoomIn" class="btn btn-light btn-sm" type="button" title="Zoom in"><i class="fas fa-plus"></i></button>
+                        <button id="treeZoomReset" class="btn btn-outline-secondary btn-sm" type="button" title="Reset zoom"><i class="fas fa-rotate-left"></i></button>
+                        <button id="treeExpandAll" class="btn btn-outline-primary btn-sm" type="button">Expand</button>
+                        <button id="treeCollapseAll" class="btn btn-outline-secondary btn-sm" type="button">Collapse</button>
+                    </div>
+                </div>
+                <div class="org-tree-stage"><div id="orgTree" class="org-tree"></div></div>
+            </section>
+        </div>
+    </div>
+</div>
+
+<div id="quickViewBackdrop" class="quick-view-backdrop"></div>
+<aside id="quickViewPanel" class="quick-view-panel" aria-hidden="true">
+    <div class="quick-view-header">
+        <div class="d-flex justify-content-between align-items-start gap-3">
+            <div class="d-flex align-items-center gap-3">
+                <div class="quick-avatar" id="quickAvatar">--</div>
+                <div>
+                    <h5 class="mb-1" id="quickName">Employee</h5>
+                    <div class="text-muted small" id="quickTitle">-</div>
+                </div>
+            </div>
+            <button type="button" class="btn btn-light btn-sm" id="quickCloseBtn" title="Close"><i class="fas fa-xmark"></i></button>
+        </div>
+    </div>
+    <div class="quick-view-body">
+        <div class="quick-field"><div class="quick-label">Employee Code</div><div class="quick-value" id="quickCode">-</div></div>
+        <div class="quick-field"><div class="quick-label">Department</div><div class="quick-value" id="quickDepartment">-</div></div>
+        <div class="quick-field"><div class="quick-label">Manager</div><div class="quick-value" id="quickManager">-</div></div>
+        <div class="quick-field"><div class="quick-label">Hiring Date</div><div class="quick-value" id="quickHireDate">-</div></div>
+        <div class="quick-field"><div class="quick-label">Mobile</div><div class="quick-value" id="quickMobile">-</div></div>
+        <div class="quick-field"><div class="quick-label">Email</div><div class="quick-value" id="quickEmail">-</div></div>
+        <div class="quick-field"><div class="quick-label">Direct Reports</div><div class="quick-value" id="quickReports">-</div></div>
+    </div>
+</aside>
+
+<script id="structureData" type="application/json"><%- JSON.stringify((employees || []).map(function(e) {
+    return {
+        employee_code: String(e.employee_code || '').trim(),
+        employee_name: e.employee_name || '',
+        title: e.title || '',
+        department: e.department || '',
+        manager_code: e.manager_code ? String(e.manager_code).trim() : '',
+        manager_name: e.manager_name || '',
+        hire_date: e.hire_date ? formatDisplayDate(e.hire_date) : '',
+        email: e.email || '',
+        mobile: e.mobile || ''
+    };
+})).replace(/</g, '\\u003c') %></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const employees = JSON.parse(document.getElementById('structureData').textContent || '[]');
+    const byCode = new Map(employees.map((e) => [String(e.employee_code || '').trim(), e]));
+    const searchInput = document.getElementById('structureSearch');
+    const departmentFilter = document.getElementById('departmentFilter');
+    const titleFilter = document.getElementById('titleFilter');
+    const managerFilter = document.getElementById('managerFilter');
+    const clearFiltersBtn = document.getElementById('clearFiltersBtn');
+    const tableBody = document.getElementById('structureTableBody');
+    const orgTree = document.getElementById('orgTree');
+    const treeZoomLabel = document.getElementById('treeZoomLabel');
+    const treeZoomIn = document.getElementById('treeZoomIn');
+    const treeZoomOut = document.getElementById('treeZoomOut');
+    const treeZoomReset = document.getElementById('treeZoomReset');
+    const treeExpandAll = document.getElementById('treeExpandAll');
+    const treeCollapseAll = document.getElementById('treeCollapseAll');
+    const visibleCount = document.getElementById('visibleCount');
+    const quickPanel = document.getElementById('quickViewPanel');
+    const quickBackdrop = document.getElementById('quickViewBackdrop');
+    const quickCloseBtn = document.getElementById('quickCloseBtn');
+    let treeZoom = 1;
+
+    function escapeHtml(value) {
+        return String(value || '')
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    }
+
+    function normalize(value) {
+        return String(value || '').trim().toLowerCase();
+    }
+
+    function missing(value) {
+        return !String(value || '').trim();
+    }
+
+    function initials(name) {
+        return String(name || 'Employee').split(/\s+/).filter(Boolean).slice(0, 2).map((p) => p[0].toUpperCase()).join('') || 'U';
+    }
+
+    function uniqueSorted(key) {
+        return [...new Set(employees.map((e) => String(e[key] || '').trim()).filter(Boolean))]
+            .sort((a, b) => a.localeCompare(b));
+    }
+
+    function fillSelect(select, values, label) {
+        select.innerHTML = `<option value="">${label}</option>` + values.map((v) => `<option value="${escapeHtml(v)}">${escapeHtml(v)}</option>`).join('');
+    }
+
+    function directReports(code, source = employees) {
+        const cleanCode = String(code || '').trim();
+        return source.filter((e) => String(e.manager_code || '').trim() === cleanCode);
+    }
+
+    function updateStats(rows) {
+        const titleCounts = rows.reduce((acc, e) => {
+            const title = String(e.title || '').trim().toUpperCase();
+            acc[title] = (acc[title] || 0) + 1;
+            return acc;
+        }, {});
+        document.getElementById('statTotal').textContent = rows.length;
+        document.getElementById('statMR').textContent = titleCounts.MR || 0;
+        document.getElementById('statAM').textContent = titleCounts.AM || 0;
+        document.getElementById('statDM').textContent = titleCounts.DM || 0;
+        document.getElementById('statDepartments').textContent = new Set(rows.map((e) => e.department).filter(Boolean)).size;
+        visibleCount.textContent = rows.length;
+    }
+
+    function filteredEmployees() {
+        const q = normalize(searchInput.value);
+        const dept = normalize(departmentFilter.value);
+        const title = normalize(titleFilter.value);
+        const manager = normalize(managerFilter.value);
+        return employees.filter((e) => {
+            const haystack = [e.employee_code, e.employee_name, e.title, e.department, e.manager_name, e.mobile, e.email].map(normalize).join(' ');
+            if (q && !haystack.includes(q)) return false;
+            if (dept && normalize(e.department) !== dept) return false;
+            if (title && normalize(e.title) !== title) return false;
+            if (manager && normalize(e.manager_name) !== manager) return false;
+            return true;
+        });
+    }
+
+    function renderTable(rows) {
+        if (!rows.length) {
+            tableBody.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-muted">No employees match the current filters.</td></tr>';
+            return;
+        }
+        tableBody.innerHTML = rows.map((e) => `
+            <tr class="structure-row" data-code="${escapeHtml(e.employee_code)}">
+                <td>${escapeHtml(e.employee_code)}</td>
+                <td class="text-start"><strong>${escapeHtml(e.employee_name || '-')}</strong></td>
+                <td>${escapeHtml(e.title || '-')}</td>
+                <td>${missing(e.department) ? '<span class="missing-data"><i class="fas fa-triangle-exclamation"></i>Missing</span>' : escapeHtml(e.department)}</td>
+                <td>${missing(e.manager_name) ? '<span class="missing-data"><i class="fas fa-triangle-exclamation"></i>Missing</span>' : escapeHtml(e.manager_name)}</td>
+                <td>${missing(e.mobile) ? '<span class="missing-data"><i class="fas fa-triangle-exclamation"></i>Missing</span>' : escapeHtml(e.mobile)}</td>
+            </tr>
+        `).join('');
+        tableBody.querySelectorAll('.structure-row').forEach((row) => {
+            row.addEventListener('click', () => openQuickView(byCode.get(row.dataset.code)));
+        });
+    }
+
+    function renderTree(rows) {
+        const q = normalize(searchInput.value);
+        const visibleCodes = new Set(rows.map((e) => e.employee_code));
+        const children = new Map();
+        rows.forEach((e) => {
+            const managerCode = String(e.manager_code || '').trim();
+            if (!children.has(managerCode)) children.set(managerCode, []);
+            children.get(managerCode).push(e);
+        });
+        children.forEach((list) => list.sort((a, b) => String(a.employee_name).localeCompare(String(b.employee_name))));
+
+        const roots = rows.filter((e) => {
+            const managerCode = String(e.manager_code || '').trim();
+            return !managerCode || !visibleCodes.has(managerCode);
+        }).sort((a, b) => String(a.employee_name).localeCompare(String(b.employee_name)));
+
+        function renderNode(e, depth = 0) {
+            const reports = children.get(e.employee_code) || [];
+            const haystack = [e.employee_code, e.employee_name, e.title, e.department, e.manager_name, e.mobile, e.email].map(normalize).join(' ');
+            const matchClass = q && haystack.includes(q) ? 'match' : '';
+            return `
+                <div class="tree-node ${depth === 0 ? 'tree-node-root' : ''}">
+                    <div class="tree-person ${matchClass}" data-code="${escapeHtml(e.employee_code)}">
+                        <button class="tree-toggle" type="button" title="Expand or collapse" ${reports.length ? '' : 'disabled'}>
+                            <i class="fas ${reports.length ? 'fa-chevron-down' : 'fa-minus'}"></i>
+                        </button>
+                        <div class="tree-person-main">
+                            <div class="tree-person-name">${escapeHtml(e.employee_name || '-')}</div>
+                            <div class="tree-person-meta">${escapeHtml(e.title || '-')} · ${escapeHtml(e.department || '-')} · ${escapeHtml(e.employee_code || '-')}</div>
+                        </div>
+                        <span class="tree-count">${reports.length}</span>
+                    </div>
+                    <div class="tree-children">${reports.map((child) => renderNode(child, depth + 1)).join('')}</div>
+                </div>
+            `;
+        }
+
+        orgTree.innerHTML = roots.length ? roots.map((root) => renderNode(root)).join('') : '<div class="text-muted">No structure data matches the current filters.</div>';
+        orgTree.querySelectorAll('.tree-person').forEach((node) => {
+            node.addEventListener('click', (event) => {
+                if (event.target.closest('.tree-toggle')) return;
+                openQuickView(byCode.get(node.dataset.code));
+            });
+        });
+        orgTree.querySelectorAll('.tree-toggle').forEach((btn) => {
+            btn.addEventListener('click', () => {
+                const node = btn.closest('.tree-node');
+                const childrenWrap = node ? node.querySelector(':scope > .tree-children') : null;
+                if (!childrenWrap) return;
+                childrenWrap.classList.toggle('collapsed');
+                const icon = btn.querySelector('i');
+                icon.classList.toggle('fa-chevron-down', !childrenWrap.classList.contains('collapsed'));
+                icon.classList.toggle('fa-chevron-right', childrenWrap.classList.contains('collapsed'));
+            });
+        });
+        applyTreeZoom();
+    }
+
+    function render() {
+        const rows = filteredEmployees();
+        updateStats(rows);
+        renderTable(rows);
+        renderTree(rows);
+    }
+
+    function openQuickView(emp) {
+        if (!emp) return;
+        const reports = directReports(emp.employee_code);
+        document.getElementById('quickAvatar').textContent = initials(emp.employee_name);
+        document.getElementById('quickName').textContent = emp.employee_name || 'Employee';
+        document.getElementById('quickTitle').textContent = emp.title || '-';
+        document.getElementById('quickCode').textContent = emp.employee_code || '-';
+        document.getElementById('quickDepartment').textContent = emp.department || '-';
+        document.getElementById('quickManager').textContent = emp.manager_name || '-';
+        document.getElementById('quickHireDate').textContent = emp.hire_date || '-';
+        document.getElementById('quickMobile').textContent = emp.mobile || '-';
+        document.getElementById('quickEmail').textContent = emp.email || '-';
+        document.getElementById('quickReports').textContent = reports.length ? reports.map((r) => r.employee_name).join(', ') : '-';
+        quickBackdrop.classList.add('open');
+        quickPanel.classList.add('open');
+        quickPanel.setAttribute('aria-hidden', 'false');
+    }
+
+    function closeQuickView() {
+        quickBackdrop.classList.remove('open');
+        quickPanel.classList.remove('open');
+        quickPanel.setAttribute('aria-hidden', 'true');
+    }
+
+    function applyTreeZoom() {
+        orgTree.style.transform = `scale(${treeZoom})`;
+        orgTree.style.width = `${100 / treeZoom}%`;
+        if (treeZoomLabel) treeZoomLabel.textContent = `${Math.round(treeZoom * 100)}%`;
+    }
+
+    function setTreeZoom(nextZoom) {
+        treeZoom = Math.max(0.55, Math.min(1.45, nextZoom));
+        applyTreeZoom();
+    }
+
+    fillSelect(departmentFilter, uniqueSorted('department'), 'All departments');
+    fillSelect(titleFilter, uniqueSorted('title'), 'All titles');
+    fillSelect(managerFilter, uniqueSorted('manager_name'), 'All managers');
+
+    [searchInput, departmentFilter, titleFilter, managerFilter].forEach((el) => el.addEventListener('input', render));
+    [departmentFilter, titleFilter, managerFilter].forEach((el) => el.addEventListener('change', render));
+    clearFiltersBtn.addEventListener('click', () => {
+        searchInput.value = '';
+        departmentFilter.value = '';
+        titleFilter.value = '';
+        managerFilter.value = '';
+        render();
+    });
+    quickCloseBtn.addEventListener('click', closeQuickView);
+    quickBackdrop.addEventListener('click', closeQuickView);
+    treeZoomIn.addEventListener('click', () => setTreeZoom(treeZoom + 0.1));
+    treeZoomOut.addEventListener('click', () => setTreeZoom(treeZoom - 0.1));
+    treeZoomReset.addEventListener('click', () => setTreeZoom(1));
+    treeExpandAll.addEventListener('click', () => {
+        orgTree.querySelectorAll('.tree-children').forEach((el) => el.classList.remove('collapsed'));
+        orgTree.querySelectorAll('.tree-toggle i').forEach((icon) => {
+            icon.classList.add('fa-chevron-down');
+            icon.classList.remove('fa-chevron-right');
+        });
+    });
+    treeCollapseAll.addEventListener('click', () => {
+        orgTree.querySelectorAll('.tree-children').forEach((el) => el.classList.add('collapsed'));
+        orgTree.querySelectorAll('.tree-toggle i').forEach((icon) => {
+            icon.classList.remove('fa-chevron-down');
+            icon.classList.add('fa-chevron-right');
+        });
+    });
+    document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape') closeQuickView();
+    });
+
+    render();
+});
+</script>

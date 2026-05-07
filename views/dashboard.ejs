@@ -1,0 +1,44 @@
+<!-- File: views/dashboard.ejs -->
+<% locals.pageTitle = 'Dashboard Overview'; %>
+
+<div class="container">
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <h2>Welcome, <%= typeof user !== 'undefined' ? user.employee_name : 'User' %></h2>
+            <p><strong>Title:</strong> <%= typeof user !== 'undefined' ? user.title : 'N/A' %></p>
+        </div>
+    </div>
+
+    <% if (typeof stats !== 'undefined' && stats.total !== undefined) { %>
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-primary text-white">
+                <h3 class="mb-0">Total Employees: <%= stats.total %></h3>
+            </div>
+            <div class="card-body">
+                <h4>Headcount by Department</h4>
+                <% if (stats.by_department && stats.by_department.length > 0) { %>
+                    <table class="table table-bordered table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Department</th>
+                                <th>Employees Count</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <% stats.by_department.forEach(function(row) { %>
+                            <tr>
+                                <td><%= row.department || 'N/A' %></td>
+                                <td><strong><%= row.total %></strong></td>
+                            </tr>
+                            <% }); %>
+                        </tbody>
+                    </table>
+                <% } else { %>
+                    <div class="alert alert-info">No department data available yet. Please upload employees via HR Manager.</div>
+                <% } %>
+            </div>
+        </div>
+    <% } else { %>
+        <div class="alert alert-warning">Statistics are currently unavailable.</div>
+    <% } %>
+</div>

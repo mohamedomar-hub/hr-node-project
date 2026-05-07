@@ -1,0 +1,118 @@
+<!-- File: views/hr/ask_hr.ejs -->
+<% locals.pageTitle = 'Ask HR'; %>
+
+<div class="container">
+    <h2>Ask HR</h2>
+    <p class="text-muted">Send a direct inquiry to an HR member.</p>
+
+    <!-- Flash Messages -->
+    <% if (typeof messages !== 'undefined' && messages) { %>
+        <% if (messages.success) { %><div class="alert alert-success"><%= messages.success %></div><% } %>
+        <% if (messages.danger) { %><div class="alert alert-danger"><%= messages.danger %></div><% } %>
+    <% } %>
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <form action="/ask_hr" method="POST">
+
+                <!-- Type Dropdown -->
+                <div class="mb-3">
+                    <label for="inquiry_type" class="form-label">Type:</label>
+                    <select id="inquiry_type" class="form-select" required>
+                        <option value="" disabled selected>-- Select Inquiry Type --</option>
+
+                        <optgroup label="Ahmed Ibrahim Eissa">
+                            <option value="HR Letters|657">HR Letters</option>
+                            <option value="Tablets|657">Tablets</option>
+                            <option value="Deductions In Salary|657">Deductions In Salary</option>
+                            <option value="Expenses|657">Expenses</option>
+                            <option value="Fuel|657">Fuel</option>
+                        </optgroup>
+
+                        <optgroup label="Habiba Tarek">
+                            <option value="Medical Insurance|224">Medical Insurance</option>
+                            <option value="Car Insurance|224">Car Insurance</option>
+                        </optgroup>
+
+                        <optgroup label="Nada Abdelhakeem Mohamed">
+                            <option value="Reward|1801">Reward</option>
+                            <option value="Mentor Business|1801">Mentor Business</option>
+                            <option value="Summer Vacation|1801">Summer Vacation</option>
+                        </optgroup>
+
+                        <optgroup label="Shrouk Sayed Mohamed">
+                            <option value="Vacations|1783">Vacations</option>
+                        </optgroup>
+
+                        <optgroup label="Rawan Magdy Ibrahim">
+                            <option value="Performance Management|1795">Performance Management</option>
+                            <option value="CEC|1795">CEC</option>
+                        </optgroup>
+                    </select>
+                </div>
+
+                <!-- HR Member (auto-selected, readonly) -->
+                <div class="mb-3">
+                    <label for="recipient" class="form-label">HR Member:</label>
+                    <select name="recipient_code" id="recipient" class="form-select" required>
+                        <option value="" disabled selected>-- Will be selected automatically --</option>
+                        <% if (typeof hr_employees !== 'undefined' && hr_employees && hr_employees.length > 0) { %>
+                            <% hr_employees.forEach(function(hr) { %>
+                                <option value="<%= hr.employee_code %>"><%= hr.employee_name %> (<%= hr.employee_code %>)</option>
+                            <% }); %>
+                        <% } else { %>
+                            <option value="" disabled>No HR members found.</option>
+                        <% } %>
+                    </select>
+                    <div class="form-text text-muted">
+                        <i class="fas fa-info-circle"></i> Selected automatically based on inquiry type.
+                    </div>
+                </div>
+
+                <!-- Message -->
+                <div class="mb-3">
+                    <label for="message" class="form-label">Your Inquiry/Message:</label>
+                    <textarea name="message" id="message" class="form-control" rows="5"
+                        placeholder="Write your question or request here..." required></textarea>
+                </div>
+
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-paper-plane me-2"></i>Send Message
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const typeSelect     = document.getElementById('inquiry_type');
+    const recipientSelect = document.getElementById('recipient');
+
+    typeSelect.addEventListener('change', function () {
+        const val = this.value; // e.g. "HR Letters|657"
+        if (!val) return;
+
+        const code = val.split('|')[1]; // "657"
+
+        // Find the matching option in recipient dropdown and select it
+        let found = false;
+        for (let i = 0; i < recipientSelect.options.length; i++) {
+            if (String(recipientSelect.options[i].value) === String(code)) {
+                recipientSelect.selectedIndex = i;
+                found = true;
+                break;
+            }
+        }
+
+        // Visual feedback
+        if (found) {
+            recipientSelect.style.borderColor = '#0f766e';
+            recipientSelect.style.background  = '#f0fdf9';
+        } else {
+            recipientSelect.style.borderColor = '';
+            recipientSelect.style.background  = '';
+        }
+    });
+});
+</script>

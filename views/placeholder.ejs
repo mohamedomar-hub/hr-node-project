@@ -1,0 +1,10 @@
+<!-- File: views/placeholder.ejs -->
+<%- include('base') %>
+
+<% block('content', function() { %>
+<div style="text-align: center; padding: 50px;">
+    <h1><%= title || "Coming Soon" %></h1>
+    <p><%= message || "This page is not yet implemented in the Node.js version." %></p>
+    <a href="/">Go Back Home</a>
+</div>
+<% }); %>

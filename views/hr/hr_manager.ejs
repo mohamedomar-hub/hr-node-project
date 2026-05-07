@@ -1,0 +1,157 @@
+<!-- File: views/hr/hr_manager.ejs -->
+<% locals.pageTitle = 'HR Manager'; %>
+
+<div class="container-fluid">
+    <h2 class="mb-4">HR Manager</h2>
+
+    <!-- Flash Messages -->
+    <% if (typeof messages !== 'undefined' && messages) { %>
+        <% if (messages.success) { %><div class="alert alert-success"><%= messages.success %></div><% } %>
+        <% if (messages.danger) { %><div class="alert alert-danger"><%= messages.danger %></div><% } %>
+        <% if (messages.warning) { %><div class="alert alert-warning"><%= messages.warning %></div><% } %>
+    <% } %>
+
+    <div class="row">
+        <!-- Bulk Upload Section -->
+        <div class="col-md-12 mb-4">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">Bulk Upload Employees (Excel)</div>
+                <div class="card-body">
+                    <p class="text-muted small">Upload an Excel file with columns: <strong>Employee Code, Employee Name, Title, Department, Manager Code, Hiring Date</strong>. Existing codes will be updated.</p>
+                    <form action="/hr_manager" method="POST" enctype="multipart/form-data" class="d-flex align-items-center gap-3">
+                        <input type="file" name="employees_file" class="form-control w-auto" accept=".xlsx, .xls" required>
+                        <button type="submit" class="btn btn-success">Upload & Update</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Add/Edit Single Employee -->
+        <div class="col-md-6 mb-4">
+            <div class="card shadow-sm">
+                <div class="card-header bg-secondary text-white">Add / Update Employee</div>
+                <div class="card-body">
+                    <form action="/hr_manager/add" method="POST">
+                        <div class="row g-2">
+                            <div class="col-md-6">
+                                <input type="text" name="code" class="form-control form-control-sm" placeholder="Employee Code *" required>
+                            </div>
+                            <div class="col-md-6">
+                                <input type="text" name="name" class="form-control form-control-sm" placeholder="Full Name *" required>
+                            </div>
+                            <div class="col-md-6">
+                                <input type="text" name="title" class="form-control form-control-sm" placeholder="Title">
+                            </div>
+                            <div class="col-md-6">
+                                <input type="text" name="department" class="form-control form-control-sm" placeholder="Department">
+                            </div>
+                            <div class="col-md-6">
+                                <input type="text" name="manager_code" class="form-control form-control-sm" placeholder="Manager Code">
+                            </div>
+                            <div class="col-md-6">
+                                <input type="password" name="password" class="form-control form-control-sm" placeholder="Password (Optional)">
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-sm mt-3">Save Employee</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Delete Employee -->
+        <div class="col-md-6 mb-4">
+            <div class="card shadow-sm border-danger">
+                <div class="card-header bg-danger text-white">Delete Employee</div>
+                <div class="card-body">
+                    <form action="/hr_manager/delete" method="POST" class="d-flex gap-2">
+                        <input type="text" name="code_del" class="form-control" placeholder="Enter Employee Code to Delete" required>
+                        <button type="submit" class="btn btn-danger" onclick="return confirm('Are you sure? This cannot be undone.')">Delete</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters & List -->
+    <div class="card shadow-sm">
+        <div class="card-header bg-light d-flex justify-content-between align-items-center">
+            <span>Employee List</span>
+            <small class="text-muted">Total: <%= typeof total !== 'undefined' ? total : 0 %></small>
+        </div>
+        <div class="card-body">
+            <!-- Filters Form -->
+            <form method="GET" action="/hr_manager" class="row g-3 align-items-end mb-3">
+                <div class="col-md-3">
+                    <label class="form-label small">Title</label>
+                    <select name="title" class="form-select form-select-sm">
+                        <option value="">All titles</option>
+                        <% if (typeof titles !== 'undefined' && titles && titles.length > 0) { %>
+                            <% titles.forEach(function(t) { %>
+                                <option value="<%= t %>" <%= typeof title_filter !== 'undefined' && title_filter === t ? 'selected' : '' %>><%= t %></option>
+                            <% }); %>
+                        <% } %>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label small">Department</label>
+                    <select name="department" class="form-select form-select-sm">
+                        <option value="">All departments</option>
+                        <% if (typeof departments !== 'undefined' && departments && departments.length > 0) { %>
+                            <% departments.forEach(function(d) { %>
+                                <option value="<%= d %>" <%= typeof dept_filter !== 'undefined' && dept_filter === d ? 'selected' : '' %>><%= d %></option>
+                            <% }); %>
+                        <% } %>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-outline-primary btn-sm w-100">Apply Filter</button>
+                </div>
+            </form>
+
+            <!-- Table -->
+            <% if (typeof employees !== 'undefined' && employees && employees.length > 0) { %>
+                <div class="table-responsive">
+                    <table class="table table-bordered table-hover table-sm">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Code</th>
+                                <th>Name</th>
+                                <th>Title</th>
+                                <th>Dept</th>
+                                <th>Manager Code</th>
+                                <th>Hire Date</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <% employees.forEach(function(e) { %>
+                            <tr>
+                                <td><%= e.employee_code %></td>
+                                <td><%= e.employee_name %></td>
+                                <td><%= e.title %></td>
+                                <td><%= e.department %></td>
+                                <td><%= e.manager_code || '-' %></td>
+                                <td><%= e.hire_date ? formatDisplayDate(e.hire_date) : '-' %></td>
+                            </tr>
+                            <% }); %>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Pagination -->
+                <nav aria-label="Page navigation" class="mt-3">
+                    <ul class="pagination justify-content-center pagination-sm">
+                        <li class="page-item <%= typeof page !== 'undefined' && page <= 1 ? 'disabled' : '' %>">
+                            <a class="page-link" href="?page=<%= typeof page !== 'undefined' ? page - 1 : 1 %>&title=<%= typeof title_filter !== 'undefined' ? title_filter : '' %>&department=<%= typeof dept_filter !== 'undefined' ? dept_filter : '' %>">Prev</a>
+                        </li>
+                        <li class="page-item disabled"><span class="page-link">Page <%= typeof page !== 'undefined' ? page : 1 %> / <%= typeof total_pages !== 'undefined' ? total_pages : 1 %></span></li>
+                        <li class="page-item <%= typeof page !== 'undefined' && page >= total_pages ? 'disabled' : '' %>">
+                            <a class="page-link" href="?page=<%= typeof page !== 'undefined' ? parseInt(page) + 1 : 2 %>&title=<%= typeof title_filter !== 'undefined' ? title_filter : '' %>&department=<%= typeof dept_filter !== 'undefined' ? dept_filter : '' %>">Next</a>
+                        </li>
+                    </ul>
+                </nav>
+            <% } else { %>
+                <div class="alert alert-info">No employees found matching your criteria.</div>
+            <% } %>
+        </div>
+    </div>
+</div>

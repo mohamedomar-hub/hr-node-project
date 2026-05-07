@@ -1,0 +1,167 @@
+<% locals.pageTitle = 'Appraisl DM'; %>
+<%
+  const selfRatings = (existing && existing.self_ratings) || {};
+  const rateOptions = ['', '1', '2', '3', '4', '5'];
+%>
+
+<style>
+  .appraisal-tabs .nav-link {
+    color: #001848;
+    font-weight: 700;
+  }
+  .appraisal-tabs .nav-link.active {
+    background: #001848;
+    color: #fff;
+    border-color: #001848;
+  }
+  .appraisal-sheet-title {
+    background: #001848;
+    color: #fff;
+    font-weight: 700;
+    text-align: center;
+    padding: 12px 16px;
+    border: 1px solid #222;
+  }
+  .appraisal-table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+    background: #fff;
+  }
+  .appraisal-table th {
+    background: #860000;
+    color: #fff;
+    text-align: center;
+    border: 1px solid #222;
+    padding: 10px;
+  }
+  .appraisal-table td {
+    border: 1px solid #222;
+    padding: 10px;
+    vertical-align: middle;
+  }
+  .appraisal-table .competency-cell {
+    width: 25%;
+    font-weight: 700;
+    text-align: center;
+  }
+  .appraisal-table .description-cell {
+    width: 55%;
+  }
+  .appraisal-table .rate-cell {
+    width: 20%;
+    min-width: 120px;
+  }
+  .appraisal-table ul {
+    margin: 0;
+    padding-left: 1.2rem;
+  }
+  .appraisal-actions {
+    position: sticky;
+    bottom: 0;
+    background: rgba(248, 249, 250, .95);
+    border-top: 1px solid #ddd;
+    padding: 16px 0 4px;
+  }
+</style>
+
+<div class="container-fluid">
+  <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
+    <div>
+      <h3 class="mb-1">Appraisl DM</h3>
+      <div class="text-muted">Self appraisal for DM competencies.</div>
+    </div>
+    <% if (existing && existing.submitted_at) { %>
+      <span class="badge bg-success">Last submitted: <%= formatDisplayDate(existing.submitted_at) %></span>
+    <% } %>
+  </div>
+
+  <% if (typeof messages !== 'undefined' && messages) { %>
+    <% if (messages.success) { %>
+      <div class="alert alert-success alert-dismissible fade show mb-4" role="alert">
+        <i class="fas fa-check-circle me-2"></i><%= Array.isArray(messages.success) ? messages.success[0] : messages.success %>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+      </div>
+    <% } %>
+    <% if (messages.danger) { %>
+      <div class="alert alert-danger alert-dismissible fade show mb-4" role="alert">
+        <i class="fas fa-exclamation-circle me-2"></i><%= Array.isArray(messages.danger) ? messages.danger[0] : messages.danger %>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+      </div>
+    <% } %>
+  <% } %>
+
+  <form action="/appraisal_dm" method="POST">
+    <ul class="nav nav-tabs appraisal-tabs mb-3" id="dmAppraisalTabs" role="tablist">
+      <% sections.forEach(function(section, index) { %>
+        <li class="nav-item" role="presentation">
+          <button
+            class="nav-link <%= index === 0 ? 'active' : '' %>"
+            id="<%= section.id %>-tab"
+            data-bs-toggle="tab"
+            data-bs-target="#<%= section.id %>"
+            type="button"
+            role="tab"
+            aria-controls="<%= section.id %>"
+            aria-selected="<%= index === 0 ? 'true' : 'false' %>"
+          ><%= section.title.replace(/^\d+\.\s*/, '') %></button>
+        </li>
+      <% }) %>
+    </ul>
+
+    <div class="tab-content">
+      <% sections.forEach(function(section, index) { %>
+        <div class="tab-pane fade <%= index === 0 ? 'show active' : '' %>" id="<%= section.id %>" role="tabpanel" aria-labelledby="<%= section.id %>-tab" tabindex="0">
+          <div class="appraisal-sheet-title"><%= section.title %></div>
+          <div class="table-responsive mb-4">
+            <table class="appraisal-table">
+              <thead>
+                <tr>
+                  <th>Competency Name</th>
+                  <th>Description</th>
+                  <th>Self Rate</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% section.rows.forEach(function(row) { %>
+                  <tr>
+                    <td class="competency-cell"><%= row.competency %></td>
+                    <td class="description-cell">
+                      <ul>
+                        <% row.points.forEach(function(point) { %>
+                          <li><%= point %></li>
+                        <% }) %>
+                      </ul>
+                    </td>
+                    <td class="rate-cell">
+                      <select class="form-select" name="self_<%= row.key %>">
+                        <% rateOptions.forEach(function(opt) { %>
+                          <option value="<%= opt %>" <%= String(selfRatings[row.key] || '') === opt ? 'selected' : '' %>><%= opt ? opt : 'Select' %></option>
+                        <% }) %>
+                      </select>
+                    </td>
+                  </tr>
+                <% }) %>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      <% }) %>
+    </div>
+
+    <div class="appraisal-actions d-flex justify-content-end gap-2">
+      <% if (existing && existing.id) { %>
+        <a class="btn btn-outline-success px-4" href="/appraisal_dm/export">
+          <i class="fas fa-file-excel me-2"></i>Export Excel
+        </a>
+        <button type="submit" form="deleteSelfAppraisal" class="btn btn-outline-danger px-4" onclick="return confirm('Delete your appraisal?');">
+          <i class="fas fa-trash me-2"></i>Delete
+        </button>
+      <% } %>
+      <button type="submit" class="btn btn-primary px-4">
+        <i class="fas fa-paper-plane me-2"></i>Submit Appraisal
+      </button>
+    </div>
+  </form>
+  <form id="deleteSelfAppraisal" action="/appraisal_dm/delete" method="POST"></form>
+</div>

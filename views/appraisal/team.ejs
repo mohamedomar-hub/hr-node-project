@@ -1,0 +1,184 @@
+<% locals.pageTitle = 'Appraisl Team'; %>
+<% const rateOptions = ['', '1', '2', '3', '4', '5']; %>
+
+<style>
+  .team-tabs .nav-link {
+    color: #001848;
+    font-weight: 700;
+  }
+  .team-tabs .nav-link.active {
+    background: #001848;
+    color: #fff;
+    border-color: #001848;
+  }
+  .appraisal-sheet-title {
+    background: #001848;
+    color: #fff;
+    font-weight: 700;
+    text-align: center;
+    padding: 12px 16px;
+    border: 1px solid #222;
+    margin-top: 18px;
+  }
+  .appraisal-table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+    background: #fff;
+  }
+  .appraisal-table th {
+    background: #860000;
+    color: #fff;
+    text-align: center;
+    border: 1px solid #222;
+    padding: 10px;
+  }
+  .appraisal-table td {
+    border: 1px solid #222;
+    padding: 10px;
+    vertical-align: middle;
+  }
+  .appraisal-table .competency-cell {
+    width: 22%;
+    font-weight: 700;
+    text-align: center;
+  }
+  .appraisal-table .description-cell {
+    width: 46%;
+  }
+  .appraisal-table .rate-cell {
+    width: 16%;
+    min-width: 110px;
+    text-align: center;
+  }
+  .appraisal-table ul {
+    margin: 0;
+    padding-left: 1.2rem;
+  }
+  .report-meta {
+    border: 1px solid #ddd;
+    background: #f8f9fa;
+    padding: 12px 16px;
+    margin-bottom: 8px;
+  }
+</style>
+
+<div class="container-fluid">
+  <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
+    <div>
+      <h3 class="mb-1">Appraisl Team</h3>
+      <div class="text-muted">Submitted appraisals with manager final rate.</div>
+    </div>
+    <div class="d-flex align-items-center gap-2">
+      <span class="badge bg-primary"><%= reports.length %> reports</span>
+      <a class="btn btn-outline-success btn-sm" href="/appraisal_team/export">
+        <i class="fas fa-file-excel me-1"></i>Export Excel
+      </a>
+    </div>
+  </div>
+
+  <% if (typeof messages !== 'undefined' && messages) { %>
+    <% if (messages.success) { %>
+      <div class="alert alert-success alert-dismissible fade show mb-4" role="alert">
+        <i class="fas fa-check-circle me-2"></i><%= Array.isArray(messages.success) ? messages.success[0] : messages.success %>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+      </div>
+    <% } %>
+    <% if (messages.danger) { %>
+      <div class="alert alert-danger alert-dismissible fade show mb-4" role="alert">
+        <i class="fas fa-exclamation-circle me-2"></i><%= Array.isArray(messages.danger) ? messages.danger[0] : messages.danger %>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+      </div>
+    <% } %>
+  <% } %>
+
+  <% if (!reports.length) { %>
+    <div class="alert alert-info">No submitted MR appraisals yet.</div>
+  <% } else { %>
+    <ul class="nav nav-tabs team-tabs mb-3" id="teamAppraisalTabs" role="tablist">
+      <% reports.forEach(function(report, index) { %>
+        <li class="nav-item" role="presentation">
+          <button
+            class="nav-link <%= index === 0 ? 'active' : '' %>"
+            id="<%= report.appraisal_type.toLowerCase() %>-<%= report.id %>-tab"
+            data-bs-toggle="tab"
+            data-bs-target="#<%= report.appraisal_type.toLowerCase() %>-<%= report.id %>"
+            type="button"
+            role="tab"
+            aria-controls="<%= report.appraisal_type.toLowerCase() %>-<%= report.id %>"
+            aria-selected="<%= index === 0 ? 'true' : 'false' %>"
+          ><%= report.appraisal_type %> - <%= report.employee_name %></button>
+        </li>
+      <% }) %>
+    </ul>
+
+    <div class="tab-content">
+      <% reports.forEach(function(report, index) { %>
+        <div class="tab-pane fade <%= index === 0 ? 'show active' : '' %>" id="<%= report.appraisal_type.toLowerCase() %>-<%= report.id %>" role="tabpanel" aria-labelledby="<%= report.appraisal_type.toLowerCase() %>-<%= report.id %>-tab" tabindex="0">
+          <form action="<%= report.final_url %>" method="POST" id="appraisal-<%= report.appraisal_type.toLowerCase() %>-<%= report.id %>">
+            <div class="report-meta d-flex justify-content-between align-items-center flex-wrap gap-2">
+              <div>
+                <strong><%= report.employee_name %></strong>
+                <span class="text-muted">(<%= report.employee_code %>)</span>
+                <span class="badge bg-secondary ms-2"><%= report.appraisal_type %></span>
+                <% if (report.department) { %><span class="text-muted"> - <%= report.department %></span><% } %>
+              </div>
+              <div class="text-muted small">
+                Manager: <%= report.manager_name || report.manager_code || 'N/A' %>
+                | Status: <%= report.status %>
+              </div>
+            </div>
+
+            <% report.sections.forEach(function(section) { %>
+              <div class="appraisal-sheet-title"><%= section.title %></div>
+              <div class="table-responsive">
+                <table class="appraisal-table">
+                  <thead>
+                    <tr>
+                      <th>Competency Name</th>
+                      <th>Description</th>
+                      <th>Self Rate</th>
+                      <th>Final Rate</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <% section.rows.forEach(function(row) { %>
+                      <tr>
+                        <td class="competency-cell"><%= row.competency %></td>
+                        <td class="description-cell">
+                          <ul>
+                            <% row.points.forEach(function(point) { %>
+                              <li><%= point %></li>
+                            <% }) %>
+                          </ul>
+                        </td>
+                        <td class="rate-cell fw-bold"><%= report.self_ratings[row.key] || '-' %></td>
+                        <td class="rate-cell">
+                          <select class="form-select" name="final_<%= row.key %>">
+                            <% rateOptions.forEach(function(opt) { %>
+                              <option value="<%= opt %>" <%= String((report.final_ratings || {})[row.key] || '') === opt ? 'selected' : '' %>><%= opt ? opt : 'Select' %></option>
+                            <% }) %>
+                          </select>
+                        </td>
+                      </tr>
+                    <% }) %>
+                  </tbody>
+                </table>
+              </div>
+            <% }) %>
+
+            <div class="d-flex justify-content-end my-4">
+              <button type="submit" form="delete-<%= report.appraisal_type.toLowerCase() %>-<%= report.id %>" class="btn btn-outline-danger px-4 me-2" onclick="return confirm('Delete this appraisal?');">
+                <i class="fas fa-trash me-2"></i>Delete
+              </button>
+              <button type="submit" class="btn btn-primary px-4">
+                <i class="fas fa-save me-2"></i>Save Final Rate
+              </button>
+            </div>
+          </form>
+          <form id="delete-<%= report.appraisal_type.toLowerCase() %>-<%= report.id %>" action="<%= report.delete_url %>" method="POST"></form>
+        </div>
+      <% }) %>
+    </div>
+  <% } %>
+</div>

@@ -1,0 +1,26 @@
+<!-- File: views/salaries/upload_salaries.ejs -->
+<% locals.pageTitle = 'Upload Salary Sheet'; %>
+
+<div class="container">
+    <div class="card shadow-sm">
+        <div class="card-header bg-primary text-white">
+            <h4 class="mb-0">Upload Latest Salary Excel File</h4>
+        </div>
+        <div class="card-body">
+            <p class="text-muted">
+                Upload the official salary sheet (.xlsx). The system will read values from cached formulas to ensure accuracy.
+                <br><small><strong>Note:</strong> Ensure column names match exactly: "Employee Code", "Month", "Net Salary", etc.</small>
+            </p>
+            
+            <form action="/salary/upload" method="POST" enctype="multipart/form-data">
+                <div class="mb-3">
+                    <label for="file" class="form-label">Select Excel File</label>
+                    <input type="file" name="file" id="file" class="form-control" accept=".xlsx, .xls" required>
+                </div>
+                <button type="submit" class="btn btn-success">
+                    <i class="fas fa-upload"></i> Upload & Process
+                </button>
+            </form>
+        </div>
+    </div>
+</div>

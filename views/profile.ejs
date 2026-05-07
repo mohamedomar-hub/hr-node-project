@@ -1,0 +1,757 @@
+<!-- File: views/profile/profile.ejs -->
+<% 
+    // Optional: Set a specific page title for the layout
+    locals.pageTitle = 'My Profile'; 
+%>
+<% const canEdit = !!(locals && locals.canEditMovements); %>
+<% const tab = (typeof activeTab !== 'undefined' ? String(activeTab || '').toLowerCase() : 'profile') || 'profile'; %>
+<%
+    const profileUser = typeof user !== 'undefined' ? user : {};
+    const profileName = profileUser.employee_name || 'Employee';
+    const initials = profileName
+        .split(/\s+/)
+        .filter(Boolean)
+        .slice(0, 2)
+        .map(function(part) { return part.charAt(0).toUpperCase(); })
+        .join('') || 'U';
+%>
+
+<style>
+    .profile-tabs {
+        display: inline-flex;
+        gap: 4px;
+        padding: 5px;
+        border: 1px solid #dbe5f0;
+        border-radius: 12px;
+        background: #f8fbff;
+    }
+    .profile-tabs .nav-link {
+        min-height: 38px;
+        padding: 0.55rem 0.85rem;
+        border: 0;
+        border-radius: 8px;
+        color: #475569;
+        font-weight: 700;
+        font-size: 0.85rem;
+    }
+    .profile-tabs .nav-link.active {
+        background: #ffffff;
+        color: #1d4ed8;
+        box-shadow: 0 8px 18px rgba(15, 23, 42, 0.08);
+    }
+    .profile-overview,
+    .profile-lower-grid {
+        display: grid;
+        gap: 16px;
+        margin-bottom: 16px;
+    }
+    .profile-overview {
+        grid-template-columns: minmax(280px, 0.9fr) minmax(420px, 1.4fr);
+    }
+    .profile-lower-grid {
+        grid-template-columns: minmax(420px, 1.35fr) minmax(280px, 0.65fr);
+    }
+    .profile-panel,
+    .profile-summary-card {
+        border: 1px solid #dbe5f0;
+        border-radius: 8px;
+        background: #ffffff;
+        box-shadow: 0 10px 24px rgba(15, 23, 42, 0.06);
+        overflow: hidden;
+    }
+    .profile-summary-card {
+        padding: 18px;
+    }
+    .profile-panel-header {
+        padding: 14px 16px;
+        border-bottom: 1px solid #e6edf5;
+        background: #f8fbff;
+        font-weight: 800;
+        color: #10213a;
+    }
+    .profile-panel-body {
+        padding: 16px;
+    }
+    .profile-avatar {
+        width: 72px;
+        height: 72px;
+        border-radius: 50%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: #1f3352;
+        color: #ffffff;
+        font-size: 1.35rem;
+        font-weight: 800;
+        overflow: hidden;
+        flex: 0 0 auto;
+    }
+    .profile-avatar img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+    .profile-title {
+        margin: 0;
+        color: #10213a;
+        font-size: 1.2rem;
+        font-weight: 800;
+        line-height: 1.25;
+    }
+    .profile-subtitle {
+        margin-top: 4px;
+        color: #64748b;
+        font-size: 0.9rem;
+    }
+    .profile-chip-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 14px;
+    }
+    .profile-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        min-height: 32px;
+        padding: 0 10px;
+        border-radius: 999px;
+        background: #eef4ff;
+        color: #1d4ed8;
+        font-size: 0.78rem;
+        font-weight: 700;
+    }
+    .profile-info-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(170px, 1fr));
+        gap: 12px;
+    }
+    .profile-info-item {
+        min-height: 74px;
+        padding: 12px;
+        border: 1px solid #e6edf5;
+        border-radius: 8px;
+        background: #fcfdff;
+    }
+    .profile-info-label {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 7px;
+        color: #64748b;
+        font-size: 0.76rem;
+        font-weight: 800;
+        text-transform: uppercase;
+    }
+    .profile-info-value {
+        color: #10213a;
+        font-weight: 700;
+        overflow-wrap: anywhere;
+    }
+    .profile-photo-box {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        margin-bottom: 16px;
+    }
+    .profile-photo-box .profile-avatar {
+        width: 92px;
+        height: 92px;
+        font-size: 1.6rem;
+    }
+    .profile-actions-row {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+    @media (max-width: 1100px) {
+        .profile-overview,
+        .profile-lower-grid {
+            grid-template-columns: 1fr;
+        }
+        .profile-info-grid {
+            grid-template-columns: repeat(2, minmax(180px, 1fr));
+        }
+    }
+    @media (max-width: 640px) {
+        .profile-tabs {
+            width: 100%;
+            display: grid;
+            grid-template-columns: 1fr;
+        }
+        .profile-info-grid {
+            grid-template-columns: 1fr;
+        }
+        .profile-photo-box {
+            align-items: flex-start;
+        }
+    }
+</style>
+
+<ul class="nav profile-tabs mb-4" id="profileTabs" role="tablist">
+    <li class="nav-item" role="presentation">
+        <button class="nav-link <%= tab === 'profile' ? 'active' : '' %>" id="tab-btn-profile" data-bs-toggle="tab" data-bs-target="#tab-profile" type="button" role="tab" aria-controls="tab-profile" aria-selected="<%= tab === 'profile' ? 'true' : 'false' %>">
+            <i class="fas fa-user me-2"></i> Profile
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link <%= tab === 'movements' ? 'active' : '' %>" id="tab-btn-movements" data-bs-toggle="tab" data-bs-target="#tab-movements" type="button" role="tab" aria-controls="tab-movements" aria-selected="<%= tab === 'movements' ? 'true' : 'false' %>">
+            <i class="fas fa-exchange-alt me-2"></i> Movements
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link <%= tab === 'community' ? 'active' : '' %>" id="tab-btn-community" data-bs-toggle="tab" data-bs-target="#tab-community" type="button" role="tab" aria-controls="tab-community" aria-selected="<%= tab === 'community' ? 'true' : 'false' %>">
+            <i class="fas fa-users me-2"></i> Community AVS
+        </button>
+    </li>
+</ul>
+
+<div class="tab-content">
+    <div class="tab-pane fade <%= tab === 'profile' ? 'show active' : '' %>" id="tab-profile" role="tabpanel" aria-labelledby="tab-btn-profile" tabindex="0">
+        <div class="profile-overview">
+            <section class="profile-summary-card">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="profile-avatar">
+                        <% if (typeof photo !== 'undefined' && photo) { %>
+                            <img src="/<%= photo %>" alt="Profile Photo">
+                        <% } else { %>
+                            <span><%= initials %></span>
+                        <% } %>
+                    </div>
+                    <div>
+                        <h2 class="profile-title"><%= profileUser.employee_name || 'N/A' %></h2>
+                        <div class="profile-subtitle"><%= profileUser.title || 'N/A' %></div>
+                    </div>
+                </div>
+                <div class="profile-chip-row">
+                    <span class="profile-chip"><i class="fas fa-id-badge"></i><%= profileUser.employee_code || 'N/A' %></span>
+                    <span class="profile-chip"><i class="fas fa-building"></i><%= profileUser.department || 'N/A' %></span>
+                    <span class="profile-chip"><i class="fas fa-calendar-day"></i><%= profileUser.hire_date ? formatDisplayDate(profileUser.hire_date) : 'N/A' %></span>
+                </div>
+            </section>
+
+            <section class="profile-panel">
+                <div class="profile-panel-header">Employee Information</div>
+                <div class="profile-panel-body">
+                    <div class="profile-info-grid">
+                        <div class="profile-info-item">
+                            <div class="profile-info-label"><i class="fas fa-id-card"></i> Code</div>
+                            <div class="profile-info-value"><%= profileUser.employee_code || 'N/A' %></div>
+                        </div>
+                        <div class="profile-info-item">
+                            <div class="profile-info-label"><i class="fas fa-briefcase"></i> Title</div>
+                            <div class="profile-info-value"><%= profileUser.title || 'N/A' %></div>
+                        </div>
+                        <div class="profile-info-item">
+                            <div class="profile-info-label"><i class="fas fa-building"></i> Department</div>
+                            <div class="profile-info-value"><%= profileUser.department || 'N/A' %></div>
+                        </div>
+                        <div class="profile-info-item">
+                            <div class="profile-info-label"><i class="fas fa-user-tie"></i> Manager</div>
+                            <div class="profile-info-value"><%= typeof manager_name !== 'undefined' ? manager_name : 'N/A' %></div>
+                        </div>
+                        <div class="profile-info-item">
+                            <div class="profile-info-label"><i class="fas fa-calendar-check"></i> Hiring Date</div>
+                            <div class="profile-info-value"><%= profileUser.hire_date ? formatDisplayDate(profileUser.hire_date) : 'N/A' %></div>
+                        </div>
+                        <div class="profile-info-item">
+                            <div class="profile-info-label"><i class="fas fa-envelope"></i> Email</div>
+                            <div class="profile-info-value"><%= profileUser.email || 'N/A' %></div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <div class="profile-lower-grid">
+            <section class="profile-panel">
+                <div class="profile-panel-header">Contact Details</div>
+                <div class="profile-panel-body">
+                    <form action="/profile/email" method="POST">
+                        <div class="row g-3 align-items-end">
+                            <div class="col-lg-5">
+                                <label class="form-label">Email</label>
+                                <input type="email" name="email" class="form-control" value="<%= profileUser.email || '' %>">
+                            </div>
+                            <div class="col-lg-5">
+                                <label class="form-label">Facebook Email</label>
+                                <input type="email" name="facebook_email" class="form-control" value="<%= profileUser.facebook_email || '' %>">
+                            </div>
+                            <div class="col-lg-2">
+                                <button type="submit" class="btn btn-primary w-100"><i class="fas fa-save me-2"></i>Save</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </section>
+
+            <section class="profile-panel">
+                <div class="profile-panel-header">Profile Photo</div>
+                <div class="profile-panel-body">
+                    <div class="profile-photo-box">
+                        <div class="profile-avatar">
+                            <% if (typeof photo !== 'undefined' && photo) { %>
+                                <img src="/<%= photo %>" alt="Profile Photo">
+                            <% } else { %>
+                                <span><%= initials %></span>
+                            <% } %>
+                        </div>
+                        <div>
+                            <div class="fw-bold"><%= profileUser.employee_name || 'Employee' %></div>
+                            <div class="text-muted small"><%= photo ? 'Photo uploaded' : 'No photo uploaded yet' %></div>
+                        </div>
+                    </div>
+                    <form action="/profile/photo" method="POST" enctype="multipart/form-data">
+                        <input type="file" name="photo" class="form-control" accept="image/*">
+                        <div class="profile-actions-row mt-3">
+                            <% if (typeof photo !== 'undefined' && photo) { %>
+                                <button type="submit" formaction="/profile/photo/delete" formmethod="POST" class="btn btn-outline-danger btn-sm" onclick="return confirm('Delete this photo?');">
+                                    <i class="fas fa-trash me-1"></i>Delete
+                                </button>
+                            <% } %>
+                            <button type="submit" class="btn btn-success btn-sm">
+                                <i class="fas fa-upload me-1"></i><%= photo ? 'Change Photo' : 'Upload Photo' %>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <div class="tab-pane fade <%= tab === 'movements' ? 'show active' : '' %>" id="tab-movements" role="tabpanel" aria-labelledby="tab-btn-movements" tabindex="0">
+        <!-- Movement History -->
+        <div class="card">
+            <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+                <span>Movement History</span>
+                <% if (typeof canEdit !== 'undefined' && canEdit) { %>
+                    <button class="btn btn-primary btn-sm" type="button" onclick="document.getElementById('movement-form').classList.toggle('d-none');">
+                        Add Movement
+                    </button>
+                <% } %>
+            </div>
+            <div class="card-body">
+        <% if (typeof canEdit !== 'undefined' && canEdit) { %>
+            <form id="movement-form" class="d-none mb-3" method="POST" action="/profile/movement">
+                <input type="hidden" name="movement_id" id="movement_id">
+                <div class="row g-2">
+                    <div class="col-md-3">
+                        <label class="form-label form-label-sm">Employee Code</label>
+                        <input name="employee_code" id="employee_code" class="form-control form-control-sm" list="employee_codes"
+                               value="<%= (locals.user ? user.employee_code : '') %>" required oninput="updateEmployeeName();loadEmployeeSnapshot();">
+                        <% if (typeof employees_list !== 'undefined' && employees_list && employees_list.length) { %>
+                            <datalist id="employee_codes">
+                                <% employees_list.forEach(function(emp){ %>
+                                    <option value="<%= emp.employee_code %>"><%= emp.employee_name %> (<%= emp.employee_code %>)</option>
+                                <% }) %>
+                            </datalist>
+                        <% } %>
+                        <div class="small text-muted" id="employee_name_hint"></div>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label form-label-sm">Action</label>
+                        <select name="action" id="action" class="form-select form-select-sm" required>
+                            <option value="">Select</option>
+                            <option value="Promotion">Promotion</option>
+                            <option value="Transfer">Transfer</option>
+                            <option value="Title Change">Title Change</option>
+                            <option value="Department Change">Department Change</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label form-label-sm">New Title</label>
+                        <select name="to_title" id="to_title" class="form-select form-select-sm">
+                            <option value="">Optional</option>
+                            <% (titles || []).forEach(function(t){ %>
+                                <option value="<%= t %>"><%= t %></option>
+                            <% }) %>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label form-label-sm">New Department</label>
+                        <select name="to_department" id="to_department" class="form-select form-select-sm">
+                            <option value="">Optional</option>
+                            <% (departments || []).forEach(function(d){ %>
+                                <option value="<%= d %>"><%= d %></option>
+                            <% }) %>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label form-label-sm">Effective Date</label>
+                        <input type="date" name="effective_date" id="effective_date" class="form-control form-control-sm" required>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label form-label-sm">Notes</label>
+                        <textarea name="notes" id="notes" class="form-control form-control-sm" rows="2" placeholder="Optional notes"></textarea>
+                    </div>
+                    <div class="col-12 d-flex gap-2">
+                        <button class="btn btn-success btn-sm">Save Movement</button>
+                        <button type="button" class="btn btn-outline-secondary btn-sm" onclick="resetMovementForm();">Cancel</button>
+                    </div>
+                </div>
+            </form>
+        <% } else { %>
+            <input type="hidden" id="employee_code" value="<%= user.employee_code %>">
+        <% } %>
+
+        <div id="employee_snapshot" class="alert alert-secondary py-2 px-3 mb-3" style="display:none;">
+            <div class="fw-bold small mb-1">Employee Snapshot</div>
+            <div class="small mb-1" id="snap_name"></div>
+            <div class="small mb-1" id="snap_title"></div>
+            <div class="small mb-1" id="snap_dept"></div>
+            <div class="small mb-1" id="snap_manager"></div>
+            <div class="small" id="snap_hire"></div>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table table-sm table-striped align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th style="width: 110px;">Date</th>
+                        <th style="width: 140px;">Action</th>
+                        <th>Change</th>
+                        <th style="width: 170px;">By</th>
+                        <th>Notes</th>
+                        <% if (canEdit) { %>
+                            <th style="width: 120px;">Manage</th>
+                        <% } %>
+                    </tr>
+                </thead>
+                <tbody id="movements_body">
+                    <% if (typeof movements !== 'undefined' && movements && movements.length > 0) { %>
+                        <% movements.forEach(function(mv){ %>
+                            <tr>
+                                <td><%= mv.effective_date || '' %></td>
+                                <td><%= mv.action || '' %></td>
+                                <td class="small text-muted">
+                                    <div>Title: <%= mv.from_title || '-' %> -> <%= mv.to_title || mv.from_title || '-' %></div>
+                                    <div>Dept: <%= mv.from_department || '-' %> -> <%= mv.to_department || mv.from_department || '-' %></div>
+                                </td>
+                                <td class="small text-muted">
+                                    <%= mv.created_by_name || 'HR' %><br>
+                                    <span class="text-secondary">(<%= mv.created_by || '' %>)</span>
+                                </td>
+                                <td class="small"><%= mv.notes || '' %></td>
+                                <% if (typeof canEdit !== 'undefined' && canEdit) { %>
+                                    <td>
+                                        <% if (Number(mv.id) !== 0) { %>
+                                            <button type="button" class="btn btn-link btn-sm p-0 movement-edit"
+                                                    data-id="<%= mv.id %>"
+                                                    data-code="<%= mv.employee_code %>"
+                                                    data-action="<%= mv.action %>"
+                                                    data-title="<%= mv.to_title || '' %>"
+                                                    data-dept="<%= mv.to_department || '' %>"
+                                                    data-date="<%= mv.effective_date || '' %>"
+                                                    data-notes="<%= mv.notes || '' %>">
+                                                Edit
+                                            </button>
+                                            <form method="POST" action="/profile/movement/delete" class="d-inline">
+                                                <input type="hidden" name="movement_id" value="<%= mv.id %>">
+                                                <input type="hidden" name="employee_code" value="<%= mv.employee_code %>">
+                                                <button type="submit" class="btn btn-link btn-sm text-danger p-0 ms-2">Delete</button>
+                                            </form>
+                                        <% } %>
+                                    </td>
+                                <% } %>
+                            </tr>
+                        <% }) %>
+                    <% } else { %>
+                        <tr>
+                            <td colspan="<%= canEdit ? 6 : 5 %>" class="text-muted small">No movements recorded yet.</td>
+                        </tr>
+                    <% } %>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="mt-2 d-flex justify-content-between align-items-center">
+            <div class="small text-muted">
+                <% if (typeof canEdit !== 'undefined' && canEdit) { %>
+                    HR can add/edit movements; all users can view and download.
+                <% } %>
+            </div>
+            <div class="d-flex gap-2">
+                <a class="btn btn-outline-primary btn-sm" id="movements_download_btn"
+                   href="/profile/movements/export?employee_code=<%= (locals.user ? user.employee_code : '') %>">
+                   Download Excel
+                </a>
+                <% if (typeof canEdit !== 'undefined' && canEdit) { %>
+                    <a class="btn btn-outline-secondary btn-sm" href="/profile/movements/export?scope=all">Download All (HR)</a>
+                <% } %>
+            </div>
+        </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="tab-pane fade <%= tab === 'community' ? 'show active' : '' %>" id="tab-community" role="tabpanel" aria-labelledby="tab-btn-community" tabindex="0">
+        <%
+            const userTitleUpper = (user && user.title ? String(user.title).toUpperCase() : '');
+            const isHr = userTitleUpper.includes('HR');
+        %>
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <div>
+                <h4 class="mb-0">Community AVS</h4>
+                <div class="text-muted small">HR posts visible to all employees</div>
+            </div>
+            <% if (isHr) { %>
+                <a class="btn btn-primary" href="/community/create"><i class="fas fa-plus me-2"></i>Create Post</a>
+            <% } %>
+        </div>
+
+        <% if (typeof communityFeed === 'undefined' || !communityFeed || communityFeed.length === 0) { %>
+            <div class="alert alert-info">No community posts yet.</div>
+        <% } else { %>
+            <% communityFeed.forEach(function(item) { const post = item.post; %>
+                <div class="card mb-3" id="post-<%= post.id %>">
+                    <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+                        <div>
+                            <strong><%= post.poster_name %></strong>
+                            <span class="text-muted small">(<%= post.poster_code %>)</span>
+                            <span class="badge bg-light text-dark ms-2"><%= (post.post_type || 'announcement') %></span>
+                            <span class="text-muted small ms-2"><%= post.created_at %></span>
+                        </div>
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="text-muted small"><i class="fas fa-heart me-1"></i><%= item.likes || 0 %></span>
+                            <form action="/community/post/<%= post.id %>/like" method="POST" class="m-0">
+                                <button type="submit" class="btn btn-sm <%= item.hasLiked ? 'btn-danger' : 'btn-outline-danger' %>">
+                                    <i class="fas fa-heart me-1"></i><%= item.hasLiked ? 'Liked' : 'Like' %>
+                                </button>
+                            </form>
+                            <% if (isHr) { %>
+                                <form action="/community/post/<%= post.id %>/delete" method="POST" class="m-0">
+                                    <button type="submit" class="btn btn-sm btn-outline-secondary">Delete</button>
+                                </form>
+                            <% } %>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3" style="white-space: pre-wrap;"><%= post.content %></div>
+
+                        <% if (item.images && item.images.length > 0) { %>
+                            <div class="row g-2 mb-3">
+                                <% item.images.forEach(function(img) { %>
+                                    <div class="col-12 col-md-6 col-lg-4">
+                                        <img src="/static/<%= img.image_path %>" class="img-fluid rounded border" alt="Post Image">
+                                    </div>
+                                <% }); %>
+                            </div>
+                        <% } %>
+
+                        <div class="small text-muted mb-2"><i class="fas fa-comments me-1"></i>Comments</div>
+                        <% if (item.comments && item.comments.length > 0) { %>
+                            <% item.comments.forEach(function(comment) { %>
+                                <div class="border-top pt-2 mt-2">
+                                    <div class="d-flex justify-content-between">
+                                        <strong class="small"><%= comment.user_name || comment.user_code %></strong>
+                                        <span class="text-muted small"><%= comment.created_at %></span>
+                                    </div>
+                                    <div class="small" style="white-space: pre-wrap;"><%= comment.comment %></div>
+                                </div>
+                            <% }); %>
+                        <% } else { %>
+                            <div class="text-muted small">No comments yet.</div>
+                        <% } %>
+
+                        <form action="/community/post/<%= post.id %>/comment" method="POST" class="mt-3">
+                            <div class="input-group">
+                                <input type="text" name="comment" class="form-control" placeholder="Write a comment..." required>
+                                <button type="submit" class="btn btn-outline-primary">Send</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            <% }); %>
+        <% } %>
+    </div>
+</div>
+
+<div id="data-container" style="display:none;" data-can-edit="<%= canEdit %>" data-employees='<%- JSON.stringify(employees_json || []) %>'></div>
+
+<script>
+    // Keep URL in sync with selected tab (?tab=profile|movements|community)
+    document.addEventListener('DOMContentLoaded', function() {
+        const tabs = document.querySelectorAll('#profileTabs button[data-bs-toggle="tab"]');
+        tabs.forEach((btn) => {
+            btn.addEventListener('shown.bs.tab', (e) => {
+                const target = e.target.getAttribute('data-bs-target') || '';
+                const nextTab =
+                    target === '#tab-community' ? 'community' :
+                    target === '#tab-movements' ? 'movements' :
+                    'profile';
+                const url = new URL(window.location.href);
+                url.searchParams.set('tab', nextTab);
+                history.replaceState({}, '', url.toString());
+            });
+        });
+    });
+
+    // FIX: Server data is loaded from the hidden data-container element
+    const dataContainer = document.getElementById('data-container');
+    const canEditMovements = dataContainer.dataset.canEdit === 'true';
+    const employeesData = canEditMovements ? JSON.parse(dataContainer.dataset.employees || '[]') : [];
+    
+    const employeesMap = {};
+    for (const e of employeesData) {
+        employeesMap[String(e.employee_code || '').trim()] = e;
+    }
+    for (const code in employeesMap) {
+        const mgr = (employeesMap[code].manager_code || '').trim();
+        employeesMap[code].manager_name = mgr && employeesMap[mgr] ? employeesMap[mgr].employee_name : '';
+    }
+
+    function updateEmployeeName() {
+        const code = (document.getElementById('employee_code').value || '').trim();
+        const hint = document.getElementById('employee_name_hint');
+        if (!hint) return;
+        const emp = employeesMap[code];
+        hint.textContent = emp ? emp.employee_name : '';
+    }
+
+    function loadEmployeeSnapshot() {
+        const code = (document.getElementById('employee_code').value || '').trim();
+        const emp = employeesMap[code];
+        const snap = document.getElementById('employee_snapshot');
+        if (!snap || !emp) {
+            if (snap) snap.style.display = 'none';
+            return;
+        }
+        snap.style.display = 'block';
+        document.getElementById('snap_name').textContent = `Name: ${emp.employee_name || ''} (${emp.employee_code || ''})`;
+        document.getElementById('snap_title').textContent = `Title: ${emp.title || ''}`;
+        document.getElementById('snap_dept').textContent = `Department: ${emp.department || ''}`;
+        document.getElementById('snap_manager').textContent = `Manager: ${emp.manager_name || ''} (${emp.manager_code || ''})`;
+        document.getElementById('snap_hire').textContent = `Hire Date: ${emp.hire_date || ''}`;
+    }
+
+    function fillMovementForm(data) {
+        document.getElementById('movement-form').classList.remove('d-none');
+        document.getElementById('movement_id').value = data.id || '';
+        document.getElementById('employee_code').value = data.employee_code || '';
+        document.getElementById('action').value = data.action || '';
+        document.getElementById('to_title').value = data.to_title || '';
+        document.getElementById('to_department').value = data.to_department || '';
+        document.getElementById('effective_date').value = data.effective_date || '';
+        document.getElementById('notes').value = data.notes || '';
+        updateEmployeeName();
+        loadEmployeeSnapshot();
+    }
+
+    function resetMovementForm() {
+        const form = document.getElementById('movement-form');
+        if (form) form.classList.add('d-none');
+        const ids = ['movement_id','action','to_title','to_department','effective_date','notes'];
+        ids.forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+    }
+
+    function bindEditButtons() {
+        document.querySelectorAll('.movement-edit').forEach(btn => {
+            btn.addEventListener('click', () => {
+                fillMovementForm({
+                    id: btn.dataset.id,
+                    employee_code: btn.dataset.code,
+                    action: btn.dataset.action,
+                    to_title: btn.dataset.title,
+                    to_department: btn.dataset.dept,
+                    effective_date: btn.dataset.date,
+                    notes: btn.dataset.notes
+                });
+            });
+        });
+    }
+
+    function escapeHtml(value) {
+        return String(value || '')
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/\"/g, '&quot;')
+          .replace(/'/g, '&#39;');
+    }
+
+    async function loadMovementHistory() {
+        const code = (document.getElementById('employee_code').value || '').trim();
+        if (!code) return;
+
+        const downloadBtn = document.getElementById('movements_download_btn');
+        if (downloadBtn) downloadBtn.href = `/profile/movements/export?employee_code=${encodeURIComponent(code)}`;
+
+        const res = await fetch(`/profile/movements/data?employee_code=${encodeURIComponent(code)}`);
+        if (!res.ok) return;
+        const data = await res.json();
+
+        const body = document.getElementById('movements_body');
+        if (!body) return;
+        body.innerHTML = '';
+
+        const moves = data.movements || [];
+        if (!moves.length) {
+            const tr = document.createElement('tr');
+            const td = document.createElement('td');
+            td.colSpan = canEditMovements ? 6 : 5;
+            td.className = 'text-muted small';
+            td.textContent = 'No movements recorded yet.';
+            tr.appendChild(td);
+            body.appendChild(tr);
+            return;
+        }
+
+        moves.forEach(mv => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+              <td>${escapeHtml(mv.effective_date || '')}</td>
+              <td>${escapeHtml(mv.action || '')}</td>
+              <td class="small text-muted">
+                <div>Title: ${escapeHtml(mv.from_title || '-') } -> ${escapeHtml(mv.to_title || mv.from_title || '-') }</div>
+                <div>Dept: ${escapeHtml(mv.from_department || '-') } -> ${escapeHtml(mv.to_department || mv.from_department || '-') }</div>
+              </td>
+              <td class="small text-muted">
+                ${escapeHtml(mv.created_by_name || 'HR')}<br>
+                <span class="text-secondary">(${escapeHtml(mv.created_by || '')})</span>
+              </td>
+              <td class="small">${escapeHtml(mv.notes || '')}</td>
+              ${canEditMovements ? `
+                <td>
+                  ${(Number(mv.id) !== 0) ? `
+                    <button type="button" class="btn btn-link btn-sm p-0 movement-edit"
+                      data-id="${escapeHtml(mv.id)}"
+                      data-code="${escapeHtml(mv.employee_code)}"
+                      data-action="${escapeHtml(mv.action)}"
+                      data-title="${escapeHtml(mv.to_title || '')}"
+                      data-dept="${escapeHtml(mv.to_department || '')}"
+                      data-date="${escapeHtml(mv.effective_date || '')}"
+                      data-notes="${escapeHtml(mv.notes || '')}"
+                    >Edit</button>
+                    <form method="POST" action="/profile/movement/delete" class="d-inline">
+                      <input type="hidden" name="movement_id" value="${escapeHtml(mv.id)}">
+                      <input type="hidden" name="employee_code" value="${escapeHtml(mv.employee_code)}">
+                      <button type="submit" class="btn btn-link btn-sm text-danger p-0 ms-2">Delete</button>
+                    </form>
+                  ` : ``}
+                </td>
+              ` : ``}
+            `;
+            body.appendChild(tr);
+        });
+
+        bindEditButtons();
+    }
+
+    if (canEditMovements) {
+        document.getElementById('employee_code').addEventListener('change', () => {
+            updateEmployeeName();
+            loadEmployeeSnapshot();
+            loadMovementHistory();
+        });
+        updateEmployeeName();
+        loadEmployeeSnapshot();
+        bindEditButtons();
+        loadMovementHistory();
+    } else {
+        bindEditButtons();
+        loadMovementHistory();
+    }
+</script>
+</div>

@@ -1,0 +1,40 @@
+<!-- File: views/settings/settings.ejs -->
+<% locals.pageTitle = 'Settings (HR)'; %>
+
+<div class="container">
+    <h2>Settings (HR)</h2>
+    <p class="text-muted">Admin tools for HR. Exports are timestamped and logged.</p>
+
+    <div class="card mb-4">
+        <div class="card-header bg-primary text-white">Data Exports / Backups</div>
+        <div class="card-body">
+            <div class="list-group">
+                <a href="/settings/export/employees" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                    Export Employees
+                    <% if (typeof last_exports !== 'undefined' && last_exports && last_exports.employees) { %>
+                        <span class="badge bg-secondary rounded-pill">Last: <%= last_exports.employees %></span>
+                    <% } %>
+                </a>
+                <!-- Add other export links similarly -->
+            </div>
+        </div>
+    </div>
+    
+    <!-- Clear Data Form -->
+    <div class="card border-danger">
+        <div class="card-header bg-danger text-white">Clear System Data</div>
+        <div class="card-body">
+            <form action="/settings/clear" method="POST" class="row g-3">
+                <div class="col-auto">
+                    <select name="target" class="form-select">
+                        <option value="expenses">Expenses</option>
+                        <option value="notifications">Notifications</option>
+                    </select>
+                </div>
+                <div class="col-auto">
+                    <button type="submit" class="btn btn-danger" onclick="return confirm('Are you sure?');">Clear Selected</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
